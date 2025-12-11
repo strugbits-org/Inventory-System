@@ -41,10 +41,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   companyId String?
-  company   Company? @relation(fields: [companyId], references: [id])
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   locationId String?
-  location   Location? @relation(fields: [locationId], references: [id])
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   createdJobs Job[] @relation("CreatedBy")
 
@@ -64,7 +64,7 @@ model Company {
   locations        Location[]
   materialsStock   Stock[]
   jobs             Job[]
-  pricingOverrides CompanyPricingOverride[]
+  overageOverrides CompanyOverageOverride[]
   invites          Invite[]
 }
 
@@ -118,80 +118,76 @@ model Material {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  globalPricing           GlobalPricing[]
-  companyPricingOverrides CompanyPricingOverride[]
-  stock                   Stock[]
-  jobMaterials            JobMaterial[]
+  variants     MaterialVariant[]
+  jobMaterials JobMaterial[]
 }
 
-model GlobalPricing {
-  id          String   @id @default(uuid())
-  materialId  String   @unique
-  basePrice   Decimal  @db.Decimal(10, 2)
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model MaterialVariant {
+  id             String   @id @default(uuid())
+  materialId     String
+  name           String // e.g. "Red 528", "Blue High-Solid"
+  color          String?
+  type           String?
+  pricePerGallon Decimal  @db.Decimal(10, 2)
+  coverageArea   Decimal  @db.Decimal(10, 2)
+  overageRate    Decimal  @db.Decimal(10, 2)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
-}
+  material         Material                 @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  stock            Stock[]
+  jobMaterials     JobMaterial[]
+  overageOverrides CompanyOverageOverride[]
 
-model CompanyPricingOverride {
-  id            String   @id @default(uuid())
-  companyId     String
-  materialId    String
-  overridePrice Decimal  @db.Decimal(10, 2)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
-
-  @@unique([companyId, materialId])
-  @@index([companyId])
+  @@unique([materialId, name])
   @@index([materialId])
 }
 
 model Stock {
-  id                String   @id @default(uuid())
-  companyId         String
-  locationId        String
-  materialId        String
-  quantity          Decimal  @db.Decimal(10, 2)
-  lowStockThreshold Decimal  @default(0) @db.Decimal(10, 2)
-  unit              String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id         String   @id @default(uuid())
+  companyId  String
+  locationId String
+  variantId  String
+  inStock    Decimal  @db.Decimal(10, 2)
+  useQty     Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  company  Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  location Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  variant  MaterialVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
-  @@unique([companyId, locationId, materialId])
+  @@unique([companyId, locationId, variantId])
   @@index([companyId])
   @@index([locationId])
-  @@index([materialId])
+  @@index([variantId])
 }
 
 model Job {
   id              String    @id @default(uuid())
+  jobId           String
   companyId       String
   locationId      String
   createdByUserId String
-  clientName      String
+  jobCost         Decimal   @db.Decimal(10, 2)
+  clientFirstName String
+  clientLastName  String?
   clientAddress   String
+  areaSqFt        Decimal   @db.Decimal(10, 2)
+  duration        Int
   status          JobStatus @default(PENDING)
-  startDate       DateTime
-  endDate         DateTime?
+  date            DateTime
+  installDate     DateTime
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  location  Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  createdBy User     @relation("CreatedBy", fields: [createdByUserId], references: [id])
-
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  location     Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  createdBy    User     @relation("CreatedBy", fields: [createdByUserId], references: [id])
   jobMaterials JobMaterial[]
 
+  @@unique([jobId, companyId])
   @@index([companyId])
   @@index([locationId])
   @@index([createdByUserId])
@@ -201,15 +197,32 @@ model JobMaterial {
   id           String   @id @default(uuid())
   jobId        String
   materialId   String
+  variantId    String
   quantityUsed Decimal  @db.Decimal(10, 2)
   unit         String
   costAtTime   Decimal  @db.Decimal(10, 2)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  material Material @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  job      Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  material Material        @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  variant  MaterialVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
 
+  @@unique([jobId, variantId])
   @@index([jobId])
-  @@index([materialId])
+  @@index([variantId])
+}
+
+model CompanyOverageOverride {
+  id          String   @id @default(uuid())
+  companyId   String
+  variantId   String
+  overageRate Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  variant MaterialVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, variantId])
 }
