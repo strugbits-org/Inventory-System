@@ -18,8 +18,8 @@ inviteRoutes.post(
 
 inviteRoutes.get(
   '/v1/company-invites',
-  authenticateToken,
-  requireSuperAdmin,
+  // authenticateToken,
+  // requireSuperAdmin,
   inviteController.getPendingInvites
 );
 
