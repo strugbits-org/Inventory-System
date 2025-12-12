@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 import logger from '../config/logger';
 
 class DatabaseService {
@@ -6,43 +8,45 @@ class DatabaseService {
   public prisma: PrismaClient;
 
   private constructor() {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new Error('DATABASE_URL environment variable is not set');
-    }
-    
+    const pool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+    })
+
+    const adapter = new PrismaPg(pool)
+
     this.prisma = new PrismaClient({
-      datasourceUrl: databaseUrl,
-      log: process.env.NODE_ENV === 'development' 
-        ? ['query', 'error', 'warn'] 
-        : ['error'],
-    } as any);
+      adapter,
+      log:
+        process.env.NODE_ENV === 'development'
+          ? ['query', 'error', 'warn']
+          : ['error'],
+    })
   }
 
   public static getInstance(): DatabaseService {
     if (!DatabaseService.instance) {
-      DatabaseService.instance = new DatabaseService();
+      DatabaseService.instance = new DatabaseService()
     }
-    return DatabaseService.instance;
+    return DatabaseService.instance
   }
 
   async connect(): Promise<void> {
     try {
-      await this.prisma.$connect();
-      logger.info('Database connected successfully');
+      await this.prisma.$connect()
+      logger.info('Database connected successfully')
     } catch (error) {
-      logger.error('Failed to connect to database:', error);
-      throw error;
+      logger.error('Failed to connect to database:', error)
+      throw error
     }
   }
 
   async disconnect(): Promise<void> {
     try {
-      await this.prisma.$disconnect();
-      logger.info('Database disconnected successfully');
+      await this.prisma.$disconnect()
+      logger.info('Database disconnected successfully')
     } catch (error) {
-      logger.error('Failed to disconnect from database:', error);
-      throw error;
+      logger.error('Failed to disconnect from database:', error)
+      throw error
     }
   }
 
@@ -195,6 +199,6 @@ class DatabaseService {
   }
 }
 
-export const db = DatabaseService.getInstance();
-export const prisma = db.prisma;
-export default db;
+export const db = DatabaseService.getInstance()
+export const prisma = db.prisma
+export default db
