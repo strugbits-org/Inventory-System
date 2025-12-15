@@ -58,7 +58,6 @@ export const errorHandler = (
   // Log error for debugging (in production, use a proper logger like Winston)
   console.error('Error:', {
     message: err.message,
-    stack: err.stack,
     statusCode,
     timestamp: new Date().toISOString(),
     path: req.path,
@@ -70,7 +69,6 @@ export const errorHandler = (
     success: false,
     message,
     ...(process.env.NODE_ENV === 'development' && {
-      stack: err.stack,
       error: err,
     }),
   });
