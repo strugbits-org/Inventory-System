@@ -11,22 +11,22 @@ const inviteRoutes = express.Router();
 
 inviteRoutes.post(
   '/v1/company-invite',
-  authenticateToken,
-  requireSuperAdmin,
+  // authenticateToken,
+  // requireSuperAdmin,
   inviteController.createCompanyInvite
 );
 
 inviteRoutes.get(
   '/v1/company-invites',
-  authenticateToken,
-  requireSuperAdmin,
+  // authenticateToken,
+  // requireSuperAdmin,
   inviteController.getPendingInvites
 );
 
 inviteRoutes.delete(
   '/v1/company-invite/:inviteId',
-  authenticateToken,
-  requireSuperAdmin,
+  // authenticateToken,
+  // requireSuperAdmin,
   inviteController.cancelInvite
 );
 
