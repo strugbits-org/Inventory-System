@@ -1,4 +1,7 @@
-.env
 /node_modules
 GEMINI.md
 /logs
+/dist
+logs/
+dist/
+config.bat
