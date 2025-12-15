@@ -1,72 +1,68 @@
-2025-12-12 18:33:53 [error]: PrismaClientConstructorValidationError: Unknown property datasourceUrl provided to PrismaClient constructor.
-Read more at https://pris.ly/d/client-constructor
-    at validatePrismaClientOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:239:13)
-    at new t (D:\Resinwerks\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:281:7)
-    at new DatabaseService (D:\Resinwerks\src\db\db.service.ts:14:19)
-    at DatabaseService.getInstance (D:\Resinwerks\src\db\db.service.ts:24:34)
-    at Object.<anonymous> (D:\Resinwerks\src\db\db.service.ts:198:35)
-    at Module._compile (node:internal/modules/cjs/loader:1760:14)
-    at Module.m._compile (D:\Resinwerks\node_modules\ts-node\src\index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1893:10
-    at Object.require.extensions.<computed> [as .ts] (D:\Resinwerks\node_modules\ts-node\src\index.ts:1621:12)
-    at Module.load (node:internal/modules/cjs/loader:1480:32)
-2025-12-12 18:34:34 [error]: PrismaClientConstructorValidationError: Using engine type "client" requires either "adapter" or "accelerateUrl" to be provided to PrismaClient constructor.
-Read more at https://pris.ly/d/client-constructor
-    at validateDependentOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:229:11)
-    at validatePrismaClientOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:246:3)
-    at new t (D:\Resinwerks\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:281:7)
-    at new DatabaseService (D:\Resinwerks\src\db\db.service.ts:9:19)
-    at DatabaseService.getInstance (D:\Resinwerks\src\db\db.service.ts:18:34)
-    at Object.<anonymous> (D:\Resinwerks\src\db\db.service.ts:192:35)
-    at Module._compile (node:internal/modules/cjs/loader:1760:14)
-    at Module.m._compile (D:\Resinwerks\node_modules\ts-node\src\index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1893:10
-    at Object.require.extensions.<computed> [as .ts] (D:\Resinwerks\node_modules\ts-node\src\index.ts:1621:12)
-2025-12-12 18:38:54 [error]: PrismaClientConstructorValidationError: Using engine type "client" requires either "adapter" or "accelerateUrl" to be provided to PrismaClient constructor.
-Read more at https://pris.ly/d/client-constructor
-    at validateDependentOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:229:11)
-    at validatePrismaClientOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:246:3)
-    at new t (D:\Resinwerks\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:281:7)
-    at new DatabaseService (D:\Resinwerks\src\db\db.service.ts:9:19)
-    at DatabaseService.getInstance (D:\Resinwerks\src\db\db.service.ts:18:34)
-    at Object.<anonymous> (D:\Resinwerks\src\db\db.service.ts:192:35)
-    at Module._compile (node:internal/modules/cjs/loader:1760:14)
-    at Module.m._compile (D:\Resinwerks\node_modules\ts-node\src\index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1893:10
-    at Object.require.extensions.<computed> [as .ts] (D:\Resinwerks\node_modules\ts-node\src\index.ts:1621:12)
-2025-12-12 18:40:28 [error]: PrismaClientConstructorValidationError: Using engine type "client" requires either "adapter" or "accelerateUrl" to be provided to PrismaClient constructor.
-Read more at https://pris.ly/d/client-constructor
-    at validateDependentOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:229:11)
-    at validatePrismaClientOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:246:3)
-    at new t (D:\Resinwerks\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:281:7)
-    at new DatabaseService (D:\Resinwerks\src\db\db.service.ts:9:19)
-    at DatabaseService.getInstance (D:\Resinwerks\src\db\db.service.ts:18:34)
-    at Object.<anonymous> (D:\Resinwerks\src\db\db.service.ts:192:35)
-    at Module._compile (node:internal/modules/cjs/loader:1760:14)
-    at Module.m._compile (D:\Resinwerks\node_modules\ts-node\src\index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1893:10
-    at Object.require.extensions.<computed> [as .ts] (D:\Resinwerks\node_modules\ts-node\src\index.ts:1621:12)
-2025-12-12 18:40:41 [error]: PrismaClientConstructorValidationError: Using engine type "client" requires either "adapter" or "accelerateUrl" to be provided to PrismaClient constructor.
-Read more at https://pris.ly/d/client-constructor
-    at validateDependentOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:229:11)
-    at validatePrismaClientOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:246:3)
-    at new t (D:\Resinwerks\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:281:7)
-    at new DatabaseService (D:\Resinwerks\src\db\db.service.ts:9:19)
-    at DatabaseService.getInstance (D:\Resinwerks\src\db\db.service.ts:18:34)
-    at Object.<anonymous> (D:\Resinwerks\src\db\db.service.ts:192:35)
-    at Module._compile (node:internal/modules/cjs/loader:1760:14)
-    at Module.m._compile (D:\Resinwerks\node_modules\ts-node\src\index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1893:10
-    at Object.require.extensions.<computed> [as .ts] (D:\Resinwerks\node_modules\ts-node\src\index.ts:1621:12)
-2025-12-12 18:40:55 [error]: PrismaClientConstructorValidationError: Using engine type "client" requires either "adapter" or "accelerateUrl" to be provided to PrismaClient constructor.
-Read more at https://pris.ly/d/client-constructor
-    at validateDependentOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:229:11)
-    at validatePrismaClientOptions (D:\Resinwerks\node_modules\@prisma\client\src\runtime\utils\validatePrismaClientOptions.ts:246:3)
-    at new t (D:\Resinwerks\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:281:7)
-    at new DatabaseService (D:\Resinwerks\src\db\db.service.ts:9:19)
-    at DatabaseService.getInstance (D:\Resinwerks\src\db\db.service.ts:18:34)
-    at Object.<anonymous> (D:\Resinwerks\src\db\db.service.ts:192:35)
-    at Module._compile (node:internal/modules/cjs/loader:1760:14)
-    at Module.m._compile (D:\Resinwerks\node_modules\ts-node\src\index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1893:10
-    at Object.require.extensions.<computed> [as .ts] (D:\Resinwerks\node_modules\ts-node\src\index.ts:1621:12)
+2025-12-12 19:16:12 [error]: TSError: ⨯ Unable to compile TypeScript:
+[96msrc/services/invites/invite.service.ts[0m:[93m1[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@prisma/client"' has no exported member 'UserRole'.
+
+[7m1[0m import { UserRole } from '@prisma/client';
+[7m [0m [91m         ~~~~~~~~[0m
+
+    at createTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1895:10
+    at Object.require.extensions.<computed> [as .ts] (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-12-12 19:17:02 [error]: TSError: ⨯ Unable to compile TypeScript:
+[96msrc/services/invites/invite.service.ts[0m:[93m1[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@prisma/client"' has no exported member 'UserRole'.
+
+[7m1[0m import { UserRole } from '@prisma/client';
+[7m [0m [91m         ~~~~~~~~[0m
+
+    at createTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1895:10
+    at Object.require.extensions.<computed> [as .ts] (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-12-12 19:17:39 [error]: TSError: ⨯ Unable to compile TypeScript:
+[96msrc/services/invites/invite.service.ts[0m:[93m1[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@prisma/client"' has no exported member 'UserRole'.
+
+[7m1[0m import { UserRole } from '@prisma/client';
+[7m [0m [91m         ~~~~~~~~[0m
+
+    at createTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1895:10
+    at Object.require.extensions.<computed> [as .ts] (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-12-12 20:22:00 [error]: TSError: ⨯ Unable to compile TypeScript:
+[96msrc/controllers/auth/auth.controller.ts[0m:[93m5[0m:[93m26[0m - [91merror[0m[90m TS2304: [0mCannot find name 'AuthService'.
+
+[7m5[0m     private authService: AuthService;
+[7m [0m [91m                         ~~~~~~~~~~~[0m
+[96msrc/controllers/auth/auth.controller.ts[0m:[93m8[0m:[93m32[0m - [91merror[0m[90m TS2304: [0mCannot find name 'AuthService'.
+
+[7m8[0m         this.authService = new AuthService();
+[7m [0m [91m                               ~~~~~~~~~~~[0m
+
+    at createTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1895:10
+    at Object.require.extensions.<computed> [as .ts] (D:\Development\Inventory-System\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)

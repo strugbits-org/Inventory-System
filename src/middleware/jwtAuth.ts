@@ -4,11 +4,15 @@ import { env } from '../config/env';
 import { AppError } from './error.middleware';
 import { UserRole } from '../types';
 
+/**
+ * JWT Payload structure
+ * CompanyId is now REQUIRED in tokens
+ */
 export interface JwtPayload {
   userId: string;
   email: string;
   role: UserRole;
-  companyId?: string;
+  companyId: string;  // Required field
   locationId?: string;
 }
 
@@ -49,40 +53,6 @@ export const authenticateToken = (
     } else {
       next(error);
     }
-  }
-};
-
-/**
- * Generate access token
- */
-export const generateAccessToken = (payload: JwtPayload): string => {
-  return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: env.JWT_EXPIRES_IN,
-  } as jwt.SignOptions);
-};
-
-/**
- * Generate refresh token
- */
-export const generateRefreshToken = (payload: JwtPayload): string => {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-  } as jwt.SignOptions);
-};
-
-/**
- * Verify refresh token
- */
-export const verifyRefreshToken = (token: string): JwtPayload => {
-  try {
-    return jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload;
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      throw new AppError('Invalid refresh token', 401);
-    } else if (error instanceof jwt.TokenExpiredError) {
-      throw new AppError('Refresh token has expired', 401);
-    }
-    throw error;
   }
 };
 

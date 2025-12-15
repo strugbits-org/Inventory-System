@@ -1,16 +1,120 @@
-2025-12-12 15:50:13 [debug]: Logger initialized in development mode
-2025-12-12 16:00:39 [debug]: Logger initialized in development mode
-2025-12-12 17:30:07 [debug]: Logger initialized in development mode
-2025-12-12 17:40:27 [debug]: Logger initialized in development mode
-2025-12-12 17:48:58 [debug]: Logger initialized in development mode
-2025-12-12 17:49:46 [debug]: Logger initialized in development mode
-2025-12-12 17:51:36 [debug]: Logger initialized in development mode
-2025-12-12 17:51:57 [debug]: Logger initialized in development mode
-2025-12-12 17:52:07 [debug]: Logger initialized in development mode
-2025-12-12 17:54:22 [debug]: Logger initialized in development mode
-2025-12-12 18:33:52 [debug]: Logger initialized in development mode
-2025-12-12 18:34:32 [debug]: Logger initialized in development mode
-2025-12-12 18:38:52 [debug]: Logger initialized in development mode
-2025-12-12 18:40:27 [debug]: Logger initialized in development mode
-2025-12-12 18:40:40 [debug]: Logger initialized in development mode
-2025-12-12 18:40:54 [debug]: Logger initialized in development mode
+2025-12-12 19:16:12 [debug]: Logger initialized in development mode
+2025-12-12 19:17:02 [debug]: Logger initialized in development mode
+2025-12-12 19:17:38 [debug]: Logger initialized in development mode
+2025-12-12 19:19:31 [debug]: Logger initialized in development mode
+2025-12-12 19:19:34 [info]: Database connected successfully
+2025-12-12 19:19:34 [info]: Server is running on port 3000
+2025-12-12 19:19:34 [info]: Environment: development
+2025-12-12 19:19:34 [info]: API URL: http://localhost:3000/api
+2025-12-12 19:19:34 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:20:10 [debug]: Logger initialized in development mode
+2025-12-12 20:20:12 [info]: Database connected successfully
+2025-12-12 20:20:12 [info]: Server is running on port 3000
+2025-12-12 20:20:12 [info]: Environment: development
+2025-12-12 20:20:12 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:20:12 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:21:29 [info]: POST /api/v1/auth/login 500 - 16ms
+2025-12-12 20:21:59 [debug]: Logger initialized in development mode
+2025-12-12 20:22:04 [debug]: Logger initialized in development mode
+2025-12-12 20:22:06 [info]: Database connected successfully
+2025-12-12 20:22:06 [info]: Server is running on port 3000
+2025-12-12 20:22:06 [info]: Environment: development
+2025-12-12 20:22:06 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:22:06 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:22:49 [info]: POST /api/v1/auth/login 500 - 17ms
+2025-12-12 20:22:57 [info]: 
+SIGINT received. Starting graceful shutdown...
+2025-12-12 20:23:54 [debug]: Logger initialized in development mode
+2025-12-12 20:23:55 [info]: Database connected successfully
+2025-12-12 20:23:55 [info]: Server is running on port 3000
+2025-12-12 20:23:55 [info]: Environment: development
+2025-12-12 20:23:55 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:23:55 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:24:50 [info]: POST /api/v1/auth/login 400 - 21054ms
+2025-12-12 20:28:46 [debug]: Logger initialized in development mode
+2025-12-12 20:28:48 [info]: Database connected successfully
+2025-12-12 20:28:48 [info]: Server is running on port 3000
+2025-12-12 20:28:48 [info]: Environment: development
+2025-12-12 20:28:48 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:28:48 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:32:35 [info]: 
+SIGINT received. Starting graceful shutdown...
+2025-12-12 20:32:41 [debug]: Logger initialized in development mode
+2025-12-12 20:32:43 [info]: Database connected successfully
+2025-12-12 20:32:43 [info]: Server is running on port 3000
+2025-12-12 20:32:43 [info]: Environment: development
+2025-12-12 20:32:43 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:32:43 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:33:46 [info]: POST /api/v1/auth/login 400 - 21041ms
+2025-12-12 20:33:59 [info]: GET /api/invites/v1/company-invites 401 - 4ms
+2025-12-12 20:34:50 [info]: 
+SIGINT received. Starting graceful shutdown...
+2025-12-12 20:35:09 [debug]: Logger initialized in development mode
+2025-12-12 20:35:10 [info]: Database connected successfully
+2025-12-12 20:35:10 [info]: Server is running on port 3000
+2025-12-12 20:35:10 [info]: Environment: development
+2025-12-12 20:35:10 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:35:10 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:35:36 [info]: GET /api/invites/v1/company-invites 400 - 21145ms
+2025-12-12 20:36:31 [info]: 
+SIGINT received. Starting graceful shutdown...
+2025-12-12 20:46:23 [debug]: Logger initialized in development mode
+2025-12-12 20:46:25 [info]: Database connected successfully
+2025-12-12 20:46:25 [info]: Server is running on port 3000
+2025-12-12 20:46:25 [info]: Environment: development
+2025-12-12 20:46:25 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:46:25 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:46:44 [info]: POST /api/v1/auth/login 400 - 147ms
+2025-12-12 20:47:00 [info]: GET /v1/company-invites 200 - 169ms
+2025-12-12 20:48:13 [info]: GET /health 200 - 1ms
+2025-12-12 20:48:53 [info]: POST /api/auth/login 404 - 4ms
+2025-12-12 20:49:51 [info]: POST /api/auth/login 404 - 3ms
+2025-12-12 20:50:53 [info]: POST /api/v1/auth/login 500 - 4ms
+2025-12-12 20:53:26 [debug]: Logger initialized in development mode
+2025-12-12 20:53:27 [info]: Database connected successfully
+2025-12-12 20:53:27 [info]: Server is running on port 3000
+2025-12-12 20:53:27 [info]: Environment: development
+2025-12-12 20:53:27 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:53:27 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:54:00 [debug]: Logger initialized in development mode
+2025-12-12 20:54:01 [info]: Database connected successfully
+2025-12-12 20:54:01 [info]: Server is running on port 3000
+2025-12-12 20:54:01 [info]: Environment: development
+2025-12-12 20:54:01 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:54:01 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:54:17 [info]: POST /login 400 - 4ms
+2025-12-12 20:54:38 [info]: POST /login 400 - 6ms
+2025-12-12 20:55:06 [debug]: Logger initialized in development mode
+2025-12-12 20:55:07 [info]: Database connected successfully
+2025-12-12 20:55:07 [info]: Server is running on port 3000
+2025-12-12 20:55:07 [info]: Environment: development
+2025-12-12 20:55:07 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:55:07 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:55:42 [debug]: Logger initialized in development mode
+2025-12-12 20:55:43 [info]: Database connected successfully
+2025-12-12 20:55:43 [info]: Server is running on port 3000
+2025-12-12 20:55:43 [info]: Environment: development
+2025-12-12 20:55:43 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:55:43 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:55:53 [info]: POST /login 400 - 14ms
+2025-12-12 20:56:30 [debug]: Logger initialized in development mode
+2025-12-12 20:56:31 [info]: Database connected successfully
+2025-12-12 20:56:31 [info]: Server is running on port 3000
+2025-12-12 20:56:31 [info]: Environment: development
+2025-12-12 20:56:31 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:56:31 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:56:37 [info]: POST /api/v1/auth/login 500 - 14ms
+2025-12-12 20:56:54 [debug]: Logger initialized in development mode
+2025-12-12 20:56:56 [info]: Database connected successfully
+2025-12-12 20:56:56 [info]: Server is running on port 3000
+2025-12-12 20:56:56 [info]: Environment: development
+2025-12-12 20:56:56 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:56:56 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:57:02 [debug]: Logger initialized in development mode
+2025-12-12 20:57:03 [info]: Database connected successfully
+2025-12-12 20:57:03 [info]: Server is running on port 3000
+2025-12-12 20:57:03 [info]: Environment: development
+2025-12-12 20:57:03 [info]: API URL: http://localhost:3000/api
+2025-12-12 20:57:03 [info]: Health check: http://localhost:3000/health
+2025-12-12 20:57:09 [info]: POST /login 400 - 11ms
+2025-12-12 20:57:33 [info]: POST /api/v1/auth/login 400 - 137ms
