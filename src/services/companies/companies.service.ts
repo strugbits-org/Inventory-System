@@ -14,6 +14,7 @@ class CompaniesService {
     adminFirstName: string;
     adminLastName: string;
     adminPassword: string;
+    adminEmail: string;
     initialLocationName?: string;
   }) {
     // 1. Verify token
@@ -26,7 +27,6 @@ class CompaniesService {
     // 2. Transaction
     const result = await prisma.$transaction(async (tx) => {
         // Create Company
-        // Note: inviteInfo.email is checked against token by verifyInviteToken
         const company = await tx.company.create({
             data: {
                 name: data.companyName,
@@ -49,7 +49,7 @@ class CompaniesService {
         const hashedPassword = await hashPassword(data.adminPassword);
         const user = await tx.user.create({
             data: {
-                email: inviteInfo.email,
+                email: data.adminEmail,
                 password: hashedPassword,
                 firstName: data.adminFirstName,
                 lastName: data.adminLastName,
