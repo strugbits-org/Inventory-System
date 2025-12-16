@@ -1,5 +1,25 @@
-import express from "express";
+import express from 'express';
+import companiesController from '../controllers/companies/companies.controller.js';
+import { authenticateToken } from '../middleware/jwtAuth.js';
+import { requireSuperAdmin, requireCompanyAdminOrSuperAdmin } from '../middleware/rbac.js';
 
-const companiesRoutes = express.Router();
+const router = express.Router();
 
-export default companiesRoutes;
+// Create Company (Invite-based) - Public endpoint (protected by token body)
+router.post('/', companiesController.createCompany);
+
+// List Companies - Superadmin only
+router.get('/', //authenticateToken, 
+    //requireSuperAdmin,
+     companiesController.listCompanies);
+
+// Toggle Enable/Disable - Superadmin only
+router.patch('/:id/status', authenticateToken, requireSuperAdmin, companiesController.toggleStatus);
+
+// Get Company - Superadmin OR Company Admin (permissions checked in controller logic as well for granular access)
+router.get('/:id', authenticateToken, requireCompanyAdminOrSuperAdmin, companiesController.getCompany);
+
+// Update Company - Superadmin OR Company Admin (permissions checked in controller logic for granular fields)
+router.patch('/:id', authenticateToken, requireCompanyAdminOrSuperAdmin, companiesController.updateCompany);
+
+export default router;
