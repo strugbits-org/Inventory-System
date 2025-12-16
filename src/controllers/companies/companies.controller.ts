@@ -10,9 +10,9 @@ class CompaniesController {
    */
   async createCompany(req: Request, res: Response) {
       try {
-          const { token, companyName, adminFirstName, adminLastName, adminPassword, initialLocationName } = req.body;
+          const { token, companyName, adminFirstName, adminLastName, adminPassword, adminEmail, initialLocationName } = req.body;
           
-          if (!token || !companyName || !adminFirstName || !adminLastName || !adminPassword) {
+          if (!token || !companyName || !adminFirstName || !adminLastName || !adminPassword || !adminEmail) {
               return res.status(400).json({ error: 'Missing required fields' });
           }
 
@@ -22,6 +22,7 @@ class CompaniesController {
               adminFirstName,
               adminLastName,
               adminPassword,
+              adminEmail,
               initialLocationName
           });
           
