@@ -1,4 +1,5 @@
 import UsersService from '../user/users.service.js';
+import { prisma } from '../../db/db.service.js';
 import JwtService from '../jwt/jwt.service.js';
 import { comparePassword } from '../../utils/helpers.js';
 
@@ -41,6 +42,18 @@ class AuthService {
 
         if (!user) {
             throw new Error('Invalid email or password');
+        }
+
+        // Check if company is disabled
+        if (user.companyId) {
+            const company = await prisma.company.findUnique({
+                where: { id: user.companyId },
+                select: { isActive: true }
+            });
+
+            if (company && !company.isActive) {
+                throw new Error('Company account is disabled. Please contact support.');
+            }
         }
 
         // Compare password
