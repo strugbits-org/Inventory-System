@@ -161,7 +161,6 @@ model Stock {
   locationId String
   variantId  String
   inStock    Decimal  @db.Decimal(10, 2)
-  useQty     Decimal  @default(0) @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
