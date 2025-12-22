@@ -36,6 +36,10 @@ router.delete('/material-variants/:id', materialVariantController.deleteVariant)
 
 // Update stock for a variant
 router.patch('/material-variants/:id/stock', authenticateToken, materialVariantController.updateStock);
+router.get('/material-variants/:id/stock', authenticateToken, materialVariantController.getStock);
+
+// Get usage forecast
+router.get('/material-variants/usage-forecast', authenticateToken, materialVariantController.getUsageForecast);
 
 // Import route
 router.post(
