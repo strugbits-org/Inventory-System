@@ -169,12 +169,113 @@ class MaterialVariantService {
         locationId,
         variantId,
         inStock: quantity,
-        useQty: 0,
       },
       include: {
         variant: true,
       }
     });
+  }
+
+  /**
+   * Get stock for a material variant in a specific location
+   */
+  async getStock(
+      variantId: string,
+      companyId: string,
+      locationId: string
+  ) {
+    const stock = await db.prisma.stock.findUnique({
+      where: {
+        companyId_locationId_variantId: {
+          companyId,
+          locationId,
+          variantId,
+        },
+      },
+      select: {
+          inStock: true,
+      }
+    });
+
+    return stock;
+  }
+
+  /**
+   * Get forecast of material usage in a time range
+   */
+  async getUsageForecast(
+    companyId: string,
+    locationId: string,
+    startDate: Date,
+    endDate: Date
+  ) {
+    // 1. Find jobs in the time range
+    const jobs = await db.prisma.job.findMany({
+      where: {
+        companyId,
+        locationId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: {
+          in: ['PENDING', 'IN_PROGRESS'] // Only look at active/future jobs? Or all jobs? "going to use" implies future.
+        }
+      },
+      include: {
+        jobMaterials: true
+      }
+    });
+
+    // 2. Aggregate usage by variantId
+    const usageMap = new Map<string, number>();
+
+    for (const job of jobs) {
+      for (const jm of job.jobMaterials) {
+         const current = usageMap.get(jm.variantId) || 0;
+         usageMap.set(jm.variantId, current + Number(jm.quantityUsed));
+      }
+    }
+
+    // 3. Get all variants that have usage OR have stock
+    // Actually, user said "fetch all the variants which are going to use... with their inStock quantity"
+    // So we primarily care about variants with >0 usage.
+    
+    const variantIds = Array.from(usageMap.keys());
+    
+    // Fetch variants and their stocks
+    const variants = await db.prisma.materialVariant.findMany({
+      where: {
+        id: { in: variantIds }
+      },
+      include: {
+        stock: {
+          where: {
+            companyId,
+            locationId
+          },
+          select: {
+            inStock: true
+          }
+        },
+        material: {
+            select: {
+                name: true,
+                unit: true
+            }
+        }
+      }
+    });
+
+    // Format result
+    return variants.map(v => ({
+      id: v.id,
+      name: v.name,
+      materialName: v.material.name,
+      unit: v.material.unit,
+      plannedUsage: usageMap.get(v.id) || 0,
+      inStock: v.stock[0]?.inStock || 0
+    }));
   }
 
   /**
