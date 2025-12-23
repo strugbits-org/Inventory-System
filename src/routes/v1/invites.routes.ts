@@ -1,7 +1,7 @@
 import express from 'express';
-import inviteController from '../controllers/invites/invite.controller.js';
-import { authenticateToken } from '../middleware/jwtAuth.js';
-import { requireSuperAdmin } from '../middleware/superadmin.js';
+import inviteController from '../../controllers/invites/invite.controller.js';
+import { authenticateToken } from '../../middleware/jwtAuth.js';
+import { requireSuperAdmin } from '../../middleware/superadmin.js';
 
 const inviteRoutes = express.Router();
 
@@ -10,23 +10,23 @@ const inviteRoutes = express.Router();
  */
 
 inviteRoutes.post(
-  '/v1/company-invite',
-  // authenticateToken,
-  // requireSuperAdmin,
+  '/company-invite',
+  authenticateToken,
+  requireSuperAdmin,
   inviteController.createCompanyInvite
 );
 
 inviteRoutes.get(
-  '/v1/company-invites',
-  // authenticateToken,
-  // requireSuperAdmin,
+  '/company-invites',
+  authenticateToken,
+  requireSuperAdmin,
   inviteController.getPendingInvites
 );
 
 inviteRoutes.delete(
-  '/v1/company-invite/:inviteId',
-  // authenticateToken,
-  // requireSuperAdmin,
+  '/company-invite/:inviteId',
+  authenticateToken,
+  requireSuperAdmin,
   inviteController.cancelInvite
 );
 

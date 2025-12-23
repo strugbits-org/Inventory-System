@@ -1,6 +1,6 @@
 import express from 'express';
-import usersController from '../controllers/users/users.controller.js';
-import { authenticateToken } from '../middleware/jwtAuth.js';
+import usersController from '../../controllers/users/users.controller.js';
+import { authenticateToken } from '../../middleware/jwtAuth.js';
 
 const usersRoutes = express.Router();
 
