@@ -6,3 +6,5 @@ GEMINI.md
 logs/
 dist/
 postman_collection.json
+/postman
+postman/
