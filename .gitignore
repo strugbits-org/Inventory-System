@@ -1,4 +1,3 @@
-.env
 /node_modules
 GEMINI.md
 /logs
@@ -6,3 +5,6 @@ GEMINI.md
 logs/
 dist/
 postman_collection.json
+/postman
+postman/
+config.bat
