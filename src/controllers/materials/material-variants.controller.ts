@@ -140,6 +140,131 @@ class MaterialVariantController {
     }
   };
 
+  /**
+   * Update stock for a variant
+   */
+  updateStock = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { inStock, locationId } = req.body;
+
+      if (!req.user || !req.user.companyId) {
+        throw new AppError('Authentication required', 401);
+      }
+
+      // Use provided locationId or fall back to user's location
+      const targetLocationId = locationId || req.user.locationId;
+
+      if (!targetLocationId) {
+        throw new AppError('Location ID is required to update stock', 400);
+      }
+
+      const schema = Joi.object({
+        inStock: Joi.number().min(0).required(),
+        locationId: Joi.string().optional()
+      });
+
+      const { error } = schema.validate({ inStock, locationId });
+      if (error) {
+        throw new AppError(`Validation error: ${error.details[0].message}`, 400);
+      }
+
+      const updatedStock = await materialVariantService.updateStock(
+        id,
+        req.user.companyId,
+        targetLocationId,
+        inStock
+      );
+
+      res.status(200).json({
+        success: true,
+        data: updatedStock,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Get stock for a variant
+   */
+  getStock = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { locationId } = req.query;
+
+      if (!req.user || !req.user.companyId) {
+        throw new AppError('Authentication required', 401);
+      }
+
+      // Use provided locationId or fall back to user's location
+      const targetLocationId = (locationId as string) || req.user.locationId;
+
+      if (!targetLocationId) {
+        throw new AppError('Location ID is required to get stock', 400);
+      }
+
+      const stock = await materialVariantService.getStock(
+        id,
+        req.user.companyId,
+        targetLocationId
+      );
+
+      res.status(200).json({
+        success: true,
+        data: stock || { inStock: 0 }, // Return 0s if no record found
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Get usage forecast
+   */
+  getUsageForecast = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { startDate, endDate, locationId } = req.query;
+
+      if (!req.user || !req.user.companyId) {
+        throw new AppError('Authentication required', 401);
+      }
+
+      // Validate query params
+      const schema = Joi.object({
+        startDate: Joi.date().iso().required(),
+        endDate: Joi.date().iso().min(Joi.ref('startDate')).required(),
+        locationId: Joi.string().optional()
+      });
+
+      const { error, value } = schema.validate({ startDate, endDate, locationId });
+      if (error) {
+        throw new AppError(`Validation error: ${error.details[0].message}`, 400);
+      }
+
+      // Use provided locationId or fall back to user's location
+      const targetLocationId = (locationId as string) || req.user.locationId;
+
+      if (!targetLocationId) {
+        throw new AppError('Location ID is required', 400);
+      }
+
+      const forecast = await materialVariantService.getUsageForecast(
+        req.user.companyId,
+        targetLocationId,
+        new Date(value.startDate),
+        new Date(value.endDate)
+      );
+
+      res.status(200).json({
+        success: true,
+        data: forecast,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
     /**
    * Import variants from CSV
    */

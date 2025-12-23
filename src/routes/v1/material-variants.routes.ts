@@ -34,12 +34,19 @@ router.get('/material-variants/:id', materialVariantController.getVariantById);
 router.put('/material-variants/:id', materialVariantController.updateVariant);
 router.delete('/material-variants/:id', materialVariantController.deleteVariant);
 
+// Update stock for a variant
+router.patch('/material-variants/:id/stock', authenticateToken, materialVariantController.updateStock);
+router.get('/material-variants/:id/stock', authenticateToken, materialVariantController.getStock);
+
+// Get usage forecast
+router.get('/material-variants/usage-forecast', authenticateToken, materialVariantController.getUsageForecast);
+
 // Import route
 router.post(
     '/material-variants/import', 
     upload.single('file'), 
     (req, res, next) => {
-        if (!req.file) {
+        if (!req.file) {    
             return res.status(400).json({ success: false, message: 'Please upload a CSV file' });
         }
         next();
