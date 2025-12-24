@@ -10,8 +10,8 @@ router.post('/', companiesController.createCompany);
 
 // List Companies - Superadmin only
 router.get('/', 
-    // authenticateToken,
-    // requireSuperAdmin, 
+    authenticateToken,
+    requireSuperAdmin, 
     companiesController.listCompanies
 );
 

@@ -7,6 +7,7 @@ interface LoginResponse {
     userId: string;
     accessToken: string;
     refreshToken: string;
+    user: any;
 }
 
 class AuthService {
@@ -22,7 +23,7 @@ class AuthService {
      * Login user with email and password
      * @param email User email
      * @param password User password
-     * @returns User ID with access and refresh tokens
+     * @returns User ID, tokens, and user details
      * @throws Error if validation fails or credentials are invalid
      */
     async login(email: string, password: string): Promise<LoginResponse> {
@@ -37,21 +38,22 @@ class AuthService {
             throw new Error('Invalid email or password');
         }
 
-        // Find user by email
-        const user = await this.usersService.getUserByEmail(email);
+        // Find user by email with company and location
+        const user = await prisma.user.findFirst({
+            where: { email },
+            include: {
+                company: true,
+                location: true
+            }
+        });
 
         if (!user) {
             throw new Error('Invalid email or password');
         }
 
         // Check if company is disabled
-        if (user.companyId) {
-            const company = await prisma.company.findUnique({
-                where: { id: user.companyId },
-                select: { isActive: true }
-            });
-
-            if (company && !company.isActive) {
+        if (user.companyId && user.company) {
+            if (!user.company.isActive) {
                 throw new Error('Company account is disabled. Please contact support.');
             }
         }
@@ -66,7 +68,13 @@ class AuthService {
         // Generate tokens
         const tokens = await this.jwtService.createTokens(user);
 
-        return tokens;
+        // Remove password from user object before returning
+        const { password: _, ...userWithoutPassword } = user;
+
+        return {
+            ...tokens,
+            user: userWithoutPassword
+        };
     }
 }
 
