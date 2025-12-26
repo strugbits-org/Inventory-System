@@ -1,50 +1,27 @@
-import { Request, Response } from 'express';
-import jobsService from '../../services/jobs/jobs.service.js';
-import { JobStatus, UserRole } from '@prisma/client';
+import { Request, Response, NextFunction } from 'express';
+import jobsServiceInstance, { JobsService } from '../../services/jobs/jobs.service.js';
+import ApiResponse from '../../utils/response.js';
+import { AppError } from '../../middleware/error.middleware.js';
 
 class JobsController {
+  private jobsService: JobsService;
+
+  constructor(jobsService: JobsService = jobsServiceInstance) {
+    this.jobsService = jobsService;
+  }
 
   /**
    * Create Job
    * Route: POST /jobs
    */
-  async createJob(req: Request, res: Response) {
+  createJob = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
-      const {
-        jobId,
-        clientFirstName,
-        clientLastName,
-        clientAddress,
-        areaSqFt,
-        duration,
-        date,
-        installDate,
-        jobCost,
-        locationId
-      } = req.body;
+      const job = await this.jobsService.createJob(req.body, user);
 
-      if (!jobId || !clientFirstName || !clientAddress || !areaSqFt || !duration || !date || !installDate || !locationId) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
-
-      const job = await jobsService.createJob({
-        jobId,
-        clientFirstName,
-        clientLastName,
-        clientAddress,
-        areaSqFt,
-        duration,
-        date,
-        installDate,
-        jobCost,
-        locationId
-      }, user);
-
-      res.status(201).json(job);
+      return res.status(201).json(ApiResponse.success(job, 'Job created successfully', 201));
     } catch (error: any) {
-      console.error(error);
-      res.status(400).json({ error: error.message });
+      next(error);
     }
   }
 
@@ -52,19 +29,19 @@ class JobsController {
    * Get Job
    * Route: GET /jobs/:id
    */
-  async getJob(req: Request, res: Response) {
+  getJob = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const user = (req as any).user;
 
-      const job = await jobsService.getJob(id, user);
+      const job = await this.jobsService.getJob(id, user);
       if (!job) {
-        return res.status(404).json({ error: 'Job not found' });
+        throw new AppError('Job not found', 404);
       }
 
-      res.json(job);
+      return res.status(200).json(ApiResponse.success(job));
     } catch (error: any) {
-      res.status(403).json({ error: error.message });
+      next(error);
     }
   }
 
@@ -72,21 +49,21 @@ class JobsController {
    * List Jobs
    * Route: GET /jobs
    */
-  async listJobs(req: Request, res: Response) {
+  listJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
       const { page, limit, companyId, status } = req.query;
 
-      const result = await jobsService.listJobs({
+      const result = await this.jobsService.listJobs({
         page: page ? Number(page) : 1,
         limit: limit ? Number(limit) : 10,
         companyId: companyId as string,
-        status: status as JobStatus
+        status: status as any
       }, user);
 
-      res.json(result);
+      return res.status(200).json(ApiResponse.paginated(result.jobs, result.meta));
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   }
 
@@ -94,16 +71,16 @@ class JobsController {
    * Update Job
    * Route: PATCH /jobs/:id
    */
-  async updateJob(req: Request, res: Response) {
+  updateJob = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const user = (req as any).user;
       const data = req.body;
 
-      const updatedJob = await jobsService.updateJob(id, data, user);
-      res.json(updatedJob);
+      const updatedJob = await this.jobsService.updateJob(id, data, user);
+      return res.status(200).json(ApiResponse.success(updatedJob, 'Job updated successfully'));
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      next(error);
     }
   }
 
@@ -111,20 +88,16 @@ class JobsController {
    * Update Job Status
    * Route: PATCH /jobs/:id/status
    */
-  async updateStatus(req: Request, res: Response) {
+  updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { status } = req.body;
       const user = (req as any).user;
 
-      if (!status || !Object.values(JobStatus).includes(status)) {
-        return res.status(400).json({ error: 'Valid status is required' });
-      }
-
-      const updatedJob = await jobsService.updateJobStatus(id, status, user);
-      res.json(updatedJob);
+      const updatedJob = await this.jobsService.updateJobStatus(id, status, user);
+      return res.status(200).json(ApiResponse.success(updatedJob, 'Job status updated successfully'));
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      next(error);
     }
   }
 }

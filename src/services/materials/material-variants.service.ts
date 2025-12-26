@@ -39,7 +39,7 @@ interface CsvRow {
   overageRate: string;
 }
 
-class MaterialVariantService {
+export class MaterialVariantService {
   /**
    * Get all variants for a material
    */

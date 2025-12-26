@@ -25,12 +25,17 @@
     "csv-parser": "^3.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",
     "pg": "^8.16.3",
-    "winston": "^3.19.0"
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.12.0",
@@ -41,6 +46,8 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.10.2",
     "@types/nodemailer": "^7.0.4",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "concurrently": "^9.2.1",
     "nodemon": "^3.1.11",
     "prisma-erd-generator": "^2.4.2",

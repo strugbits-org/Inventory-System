@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import Joi from 'joi';
-import materialVariantService from '../../services/materials/material-variants.service.js';
+import materialVariantServiceInstance, { MaterialVariantService } from '../../services/materials/material-variants.service.js';
+import ApiResponse from '../../utils/response.js';
 import { AppError } from '../../middleware/error.middleware.js';
 import fs from 'fs';
 import csv from 'csv-parser';
 
 class MaterialVariantController {
+  private materialVariantService: MaterialVariantService;
+
+  constructor(materialVariantService: MaterialVariantService = materialVariantServiceInstance) {
+    this.materialVariantService = materialVariantService;
+  }
   
   /**
    * Get all variants for a material
@@ -15,15 +20,12 @@ class MaterialVariantController {
       const { materialId } = req.params;
       const { includeInactive } = req.query;
 
-      const variants = await materialVariantService.getMaterialVariants(
+      const variants = await this.materialVariantService.getMaterialVariants(
         materialId,
         includeInactive === 'true'
       );
 
-      res.status(200).json({
-        success: true,
-        data: variants,
-      });
+      return res.status(200).json(ApiResponse.success(variants));
     } catch (error) {
       next(error);
     }
@@ -35,16 +37,13 @@ class MaterialVariantController {
   getVariantById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const variant = await materialVariantService.getVariantById(id);
+      const variant = await this.materialVariantService.getVariantById(id);
 
       if (!variant) {
         throw new AppError('Material variant not found', 404);
       }
 
-      res.status(200).json({
-        success: true,
-        data: variant,
-      });
+      return res.status(200).json(ApiResponse.success(variant));
     } catch (error) {
       next(error);
     }
@@ -57,29 +56,12 @@ class MaterialVariantController {
     try {
       const { materialId } = req.params;
 
-      const schema = Joi.object({
-        name: Joi.string().required(),
-        color: Joi.string().optional().allow(null, ''),
-        type: Joi.string().optional().allow(null, ''),
-        pricePerGallon: Joi.number().min(0).required(),
-        coverageArea: Joi.number().min(0).required(),
-        overageRate: Joi.number().min(0).required(),
-      });
-
-      const { error, value } = schema.validate(req.body);
-      if (error) {
-        throw new AppError(`Validation error: ${error.details[0].message}`, 400);
-      }
-
-      const variant = await materialVariantService.createVariant({
+      const variant = await this.materialVariantService.createVariant({
         materialId,
-        ...value,
+        ...req.body,
       });
 
-      res.status(201).json({
-        success: true,
-        data: variant,
-      });
+      return res.status(201).json(ApiResponse.success(variant, 'Material variant created successfully', 201));
     } catch (error) {
       next(error);
     }
@@ -92,32 +74,9 @@ class MaterialVariantController {
     try {
       const { id } = req.params;
 
-      const schema = Joi.object({
-        name: Joi.string().optional(),
-        color: Joi.string().optional().allow(null, ''),
-        type: Joi.string().optional().allow(null, ''),
-        pricePerGallon: Joi.number().min(0).optional(),
-        coverageArea: Joi.number().min(0).optional(),
-        overageRate: Joi.number().min(0).optional(),
-        isActive: Joi.boolean().optional(),
-      });
+      const variant = await this.materialVariantService.updateVariant(id, req.body);
 
-      const { error, value } = schema.validate(req.body);
-      if (error) {
-        throw new AppError(`Validation error: ${error.details[0].message}`, 400);
-      }
-
-      // If body is empty
-      if (Object.keys(value).length === 0) {
-        throw new AppError('No data provided for update', 400);
-      }
-
-      const variant = await materialVariantService.updateVariant(id, value);
-
-      res.status(200).json({
-        success: true,
-        data: variant,
-      });
+      return res.status(200).json(ApiResponse.success(variant, 'Material variant updated successfully'));
     } catch (error) {
       next(error);
     }
@@ -129,12 +88,9 @@ class MaterialVariantController {
   deleteVariant = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      await materialVariantService.deleteVariant(id);
+      await this.materialVariantService.deleteVariant(id);
 
-      res.status(200).json({
-        success: true,
-        message: 'Material variant deactivated',
-      });
+      return res.status(200).json(ApiResponse.success(null, 'Material variant deactivated'));
     } catch (error) {
       next(error);
     }
@@ -147,39 +103,27 @@ class MaterialVariantController {
     try {
       const { id } = req.params;
       const { inStock, locationId } = req.body;
+      const user = (req as any).user;
 
-      if (!req.user || !req.user.companyId) {
+      if (!user || !user.companyId) {
         throw new AppError('Authentication required', 401);
       }
 
       // Use provided locationId or fall back to user's location
-      const targetLocationId = locationId || req.user.locationId;
+      const targetLocationId = locationId || user.locationId;
 
       if (!targetLocationId) {
         throw new AppError('Location ID is required to update stock', 400);
       }
 
-      const schema = Joi.object({
-        inStock: Joi.number().min(0).required(),
-        locationId: Joi.string().optional()
-      });
-
-      const { error } = schema.validate({ inStock, locationId });
-      if (error) {
-        throw new AppError(`Validation error: ${error.details[0].message}`, 400);
-      }
-
-      const updatedStock = await materialVariantService.updateStock(
+      const updatedStock = await this.materialVariantService.updateStock(
         id,
-        req.user.companyId,
+        user.companyId,
         targetLocationId,
         inStock
       );
 
-      res.status(200).json({
-        success: true,
-        data: updatedStock,
-      });
+      return res.status(200).json(ApiResponse.success(updatedStock, 'Stock updated successfully'));
     } catch (error) {
       next(error);
     }
@@ -192,28 +136,26 @@ class MaterialVariantController {
     try {
       const { id } = req.params;
       const { locationId } = req.query;
+      const user = (req as any).user;
 
-      if (!req.user || !req.user.companyId) {
+      if (!user || !user.companyId) {
         throw new AppError('Authentication required', 401);
       }
 
       // Use provided locationId or fall back to user's location
-      const targetLocationId = (locationId as string) || req.user.locationId;
+      const targetLocationId = (locationId as string) || user.locationId;
 
       if (!targetLocationId) {
         throw new AppError('Location ID is required to get stock', 400);
       }
 
-      const stock = await materialVariantService.getStock(
+      const stock = await this.materialVariantService.getStock(
         id,
-        req.user.companyId,
+        user.companyId,
         targetLocationId
       );
 
-      res.status(200).json({
-        success: true,
-        data: stock || { inStock: 0 }, // Return 0s if no record found
-      });
+      return res.status(200).json(ApiResponse.success(stock || { inStock: 0 }));
     } catch (error) {
       next(error);
     }
@@ -225,41 +167,27 @@ class MaterialVariantController {
   getUsageForecast = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { startDate, endDate, locationId } = req.query;
+      const user = (req as any).user;
 
-      if (!req.user || !req.user.companyId) {
+      if (!user || !user.companyId) {
         throw new AppError('Authentication required', 401);
       }
 
-      // Validate query params
-      const schema = Joi.object({
-        startDate: Joi.date().iso().required(),
-        endDate: Joi.date().iso().min(Joi.ref('startDate')).required(),
-        locationId: Joi.string().optional()
-      });
-
-      const { error, value } = schema.validate({ startDate, endDate, locationId });
-      if (error) {
-        throw new AppError(`Validation error: ${error.details[0].message}`, 400);
-      }
-
       // Use provided locationId or fall back to user's location
-      const targetLocationId = (locationId as string) || req.user.locationId;
+      const targetLocationId = (locationId as string) || user.locationId;
 
       if (!targetLocationId) {
         throw new AppError('Location ID is required', 400);
       }
 
-      const forecast = await materialVariantService.getUsageForecast(
-        req.user.companyId,
+      const forecast = await this.materialVariantService.getUsageForecast(
+        user.companyId,
         targetLocationId,
-        new Date(value.startDate),
-        new Date(value.endDate)
+        new Date(startDate as string),
+        new Date(endDate as string)
       );
 
-      res.status(200).json({
-        success: true,
-        data: forecast,
-      });
+      return res.status(200).json(ApiResponse.success(forecast));
     } catch (error) {
       next(error);
     }
@@ -285,8 +213,8 @@ class MaterialVariantController {
           fs.unlinkSync(req.file!.path);
 
           try {
-            const importResult = await materialVariantService.importFromCsv(results, mode);
-            res.status(200).json(importResult);
+            const importResult = await this.materialVariantService.importFromCsv(results, mode);
+            return res.status(200).json(ApiResponse.success(importResult, 'CSV import processed successfully'));
           } catch (error) {
              next(error);
           }
@@ -304,3 +232,4 @@ class MaterialVariantController {
 }
 
 export default new MaterialVariantController();
+

@@ -1,35 +1,26 @@
-import { Request, Response } from 'express';
-import companiesService from '../../services/companies/companies.service.js';
+import { Request, Response, NextFunction } from 'express';
+import companiesService, { CompaniesService } from '../../services/companies/companies.service.js';
 import { UserRole } from '@prisma/client';
+import ApiResponse from '../../utils/response.js';
+import { AppError } from '../../middleware/error.middleware.js';
 
 class CompaniesController {
+  private companiesService: CompaniesService;
+
+  constructor(companiesServiceInstance: CompaniesService = companiesService) {
+    this.companiesService = companiesServiceInstance;
+  }
 
   /**
    * Create a company using an invite token
    * Public endpoint (protected by token)
    */
-  async createCompany(req: Request, res: Response) {
+  createCompany = async (req: Request, res: Response, next: NextFunction) => {
       try {
-          const { token, companyName, adminFirstName, adminLastName, adminPassword, adminEmail, initialLocationName } = req.body;
-          
-          if (!token || !companyName || !adminFirstName || !adminLastName || !adminPassword || !adminEmail) {
-              return res.status(400).json({ error: 'Missing required fields' });
-          }
-
-          const result = await companiesService.createCompanyFromInvite({
-              token,
-              companyName,
-              adminFirstName,
-              adminLastName,
-              adminPassword,
-              adminEmail,
-              initialLocationName
-          });
-          
-          res.status(201).json(result);
+          const result = await this.companiesService.createCompanyFromInvite(req.body);
+          return res.status(201).json(ApiResponse.success(result, 'Company created successfully', 201));
       } catch (error: any) {
-          console.error(error);
-          res.status(400).json({ error: error.message });
+          next(error);
       }
   }
 
@@ -37,23 +28,23 @@ class CompaniesController {
    * Get company details
    * Accessible by Superadmin and the Company's Admin
    */
-  async getCompany(req: Request, res: Response) {
+  getCompany = async (req: Request, res: Response, next: NextFunction) => {
       try {
           const { id } = req.params;
           const user = (req as any).user;
 
           // Check access
           if (user.role !== UserRole.SUPERADMIN && user.companyId !== id) {
-              return res.status(403).json({ error: 'Access denied' });
+              throw new AppError('Access denied', 403);
           }
 
-          const company = await companiesService.getCompany(id);
+          const company = await this.companiesService.getCompany(id);
           if (!company) {
-              return res.status(404).json({ error: 'Company not found' });
+              throw new AppError('Company not found', 404);
           }
-          res.json(company);
+          return res.status(200).json(ApiResponse.success(company));
       } catch (error: any) {
-          res.status(500).json({ error: error.message });
+          next(error);
       }
   }
 
@@ -61,22 +52,17 @@ class CompaniesController {
     * List all companies
     * Accessible by Superadmin
     */
-   async listCompanies(req: Request, res: Response) {
+   listCompanies = async (req: Request, res: Response, next: NextFunction) => {
       try {
-          // Note: Middleware should enforce Superadmin role for this, 
-          // but we can double check or rely on routes.
-          // Requirement: Superadmin: List all companies
-          // Requirement: Company Admin: Not listed as having list capability.
-          
           const { page, limit, isActive } = req.query;
-          const result = await companiesService.listCompanies({
+          const result = await this.companiesService.listCompanies({
               page: page ? Number(page) : 1,
               limit: limit ? Number(limit) : 10,
               isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined
           });
-          res.json(result);
+          return res.status(200).json(ApiResponse.paginated(result.companies, result.meta));
       } catch (error: any) {
-          res.status(500).json({ error: error.message });
+          next(error);
       }
   }
 
@@ -85,7 +71,7 @@ class CompaniesController {
    * Superadmin: Can update 'approvedBySuperadmin', 'name'
    * Company Admin: Can update 'name' only
    */
-  async updateCompany(req: Request, res: Response) {
+  updateCompany = async (req: Request, res: Response, next: NextFunction) => {
       try {
           const { id } = req.params;
           const { name, approvedBySuperadmin } = req.body;
@@ -97,16 +83,16 @@ class CompaniesController {
           } else if (user.role === UserRole.COMPANY && user.companyId === id) {
               // Can only update name
               if (approvedBySuperadmin !== undefined) {
-                  return res.status(403).json({ error: 'Only superadmin can approve companies' });
+                  throw new AppError('Only superadmin can approve companies', 403);
               }
           } else {
-               return res.status(403).json({ error: 'Access denied' });
+               throw new AppError('Access denied', 403);
           }
 
-          const updated = await companiesService.updateCompany(id, { name, approvedBySuperadmin });
-          res.json(updated);
+          const updated = await this.companiesService.updateCompany(id, { name, approvedBySuperadmin });
+          return res.status(200).json(ApiResponse.success(updated, 'Company updated successfully'));
       } catch (error: any) {
-          res.status(500).json({ error: error.message });
+          next(error);
       }
   }
 
@@ -114,21 +100,18 @@ class CompaniesController {
    * Disable / Enable Company
    * Superadmin only
    */
-  async toggleStatus(req: Request, res: Response) {
+  toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
        try {
            const { id } = req.params;
-           const { isActive } = req.body; // Expect boolean
+           const { isActive } = req.body;
 
-           if (isActive === undefined) {
-               return res.status(400).json({ error: 'isActive is required' });
-           }
-
-           const updated = await companiesService.toggleCompanyStatus(id, isActive);
-           res.json(updated);
+           const updated = await this.companiesService.toggleCompanyStatus(id, isActive);
+           return res.status(200).json(ApiResponse.success(updated, `Company ${isActive ? 'enabled' : 'disabled'} successfully`));
        } catch (error: any) {
-           res.status(500).json({ error: error.message });
+           next(error);
        }
   }
 }
 
 export default new CompaniesController();
+

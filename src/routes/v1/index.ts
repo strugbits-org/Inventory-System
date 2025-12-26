@@ -16,6 +16,6 @@ v1Routes.use("/jobs", jobsRoutes);
 v1Routes.use("/users", usersRoutes);
 v1Routes.use("/stocks", stocksRoutes);
 v1Routes.use("/invites", inviteRoutes);
-v1Routes.use("/", materialVariantsRoutes);
+v1Routes.use("/material-variants", materialVariantsRoutes);
 
 export default v1Routes;

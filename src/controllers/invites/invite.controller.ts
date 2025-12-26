@@ -1,37 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
-import inviteService from '../../services/invites/invite.service.js';
-import Joi from 'joi';
+import inviteServiceInstance, { InviteService } from '../../services/invites/invite.service.js';
+import ApiResponse from '../../utils/response.js';
+import { AppError } from '../../middleware/error.middleware.js';
 
 class InviteController {
+  private inviteService: InviteService;
+
+  constructor(inviteService: InviteService = inviteServiceInstance) {
+    this.inviteService = inviteService;
+  }
+
   /**
    * POST /superadmin/company-invite
    * Create a new company invite
    */
-  async createCompanyInvite(req: Request, res: Response, next: NextFunction) {
+  createCompanyInvite = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const schema = Joi.object({
-        companyEmail: Joi.string().email().required(),
+      const result = await this.inviteService.createCompanyInvite({
+        companyEmail: req.body.companyEmail,
       });
 
-      const { error, value } = schema.validate(req.body);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          errors: error.details.map((detail) => detail.message),
-        });
-      }
-
-      const result = await inviteService.createCompanyInvite({
-        companyEmail: value.companyEmail,
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: 'Company invite created and email sent successfully',
-        data: result,
-      });
+      return res.status(201).json(ApiResponse.success(result, 'Company invite created and email sent successfully', 201));
     } catch (error) {
       next(error);
     }
@@ -41,15 +30,11 @@ class InviteController {
    * GET /superadmin/company-invites
    * Get all pending company invites
    */
-  async getPendingInvites(req: Request, res: Response, next: NextFunction) {
+  getPendingInvites = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const invites = await inviteService.getPendingCompanyInvites();
+      const invites = await this.inviteService.getPendingCompanyInvites();
 
-      return res.status(200).json({
-        success: true,
-        data: invites,
-        count: invites.length,
-      });
+      return res.status(200).json(ApiResponse.success(invites, 'Pending invites retrieved', 200));
     } catch (error) {
       next(error);
     }
@@ -59,29 +44,11 @@ class InviteController {
    * POST /invite/verify
    * Verify an invite token (public endpoint)
    */
-  async verifyInviteToken(req: Request, res: Response, next: NextFunction) {
+  verifyInviteToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const schema = Joi.object({
-        token: Joi.string().required(),
-      });
+      const inviteData = await this.inviteService.verifyInviteToken(req.body.token);
 
-      const { error, value } = schema.validate(req.body);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          errors: error.details.map((detail) => detail.message),
-        });
-      }
-
-      const inviteData = await inviteService.verifyInviteToken(value.token);
-
-      return res.status(200).json({
-        success: true,
-        message: 'Token is valid',
-        data: inviteData,
-      });
+      return res.status(200).json(ApiResponse.success(inviteData, 'Token is valid'));
     } catch (error) {
       next(error);
     }
@@ -91,23 +58,17 @@ class InviteController {
    * DELETE /superadmin/company-invite/:inviteId
    * Cancel a pending invite
    */
-  async cancelInvite(req: Request, res: Response, next: NextFunction) {
+  cancelInvite = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { inviteId } = req.params;
 
       if (!inviteId) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invite ID is required',
-        });
+        throw new AppError('Invite ID is required', 400);
       }
 
-      const result = await inviteService.cancelInvite(inviteId);
+      const result = await this.inviteService.cancelInvite(inviteId);
 
-      return res.status(200).json({
-        success: true,
-        message: result.message,
-      });
+      return res.status(200).json(ApiResponse.success(null, result.message));
     } catch (error) {
       next(error);
     }
@@ -115,3 +76,4 @@ class InviteController {
 }
 
 export default new InviteController();
+

@@ -1,8 +1,10 @@
 import express from 'express';
+import Joi from 'joi';
 import multer from 'multer';
 import materialVariantController from '../../controllers/materials/material-variants.controller.js';
-import { requireSuperAdmin } from '../../middleware/superadmin.js';
+import { requireSuperAdmin } from '../../middleware/rbac.js'; // Using rbac.ts instead of superadmin.ts
 import { authenticateToken } from '../../middleware/jwtAuth.js';
+import { validate } from '../../middleware/validation.middleware.js';
 
 const router = express.Router();
 
@@ -21,29 +23,57 @@ const upload = multer({
     }
 });
 
-// Apply auth middleware to all routes
-// router.use(authenticateToken);
-// router.use(requireSuperAdmin);
+const createVariantSchema = Joi.object({
+    name: Joi.string().required(),
+    color: Joi.string().optional().allow(null, ''),
+    type: Joi.string().optional().allow(null, ''),
+    pricePerGallon: Joi.number().min(0).required(),
+    coverageArea: Joi.number().min(0).required(),
+    overageRate: Joi.number().min(0).required(),
+});
 
-// Material specific routes
-router.post('/materials/:materialId/variants', materialVariantController.createVariant);
-router.get('/materials/:materialId/variants', materialVariantController.getVariants);
+const updateVariantSchema = Joi.object({
+    name: Joi.string().optional(),
+    color: Joi.string().optional().allow(null, ''),
+    type: Joi.string().optional().allow(null, ''),
+    pricePerGallon: Joi.number().min(0).optional(),
+    coverageArea: Joi.number().min(0).optional(),
+    overageRate: Joi.number().min(0).optional(),
+    isActive: Joi.boolean().optional(),
+});
 
-// Variant ID routes
-router.get('/material-variants/:id', materialVariantController.getVariantById);
-router.put('/material-variants/:id', materialVariantController.updateVariant);
-router.delete('/material-variants/:id', materialVariantController.deleteVariant);
+const updateStockSchema = Joi.object({
+    inStock: Joi.number().min(0).required(),
+    locationId: Joi.string().optional()
+});
+
+const usageForecastSchema = Joi.object({
+    startDate: Joi.date().iso().required(),
+    endDate: Joi.date().iso().min(Joi.ref('startDate')).required(),
+    locationId: Joi.string().optional()
+});
+
+// Material specific routes (Superadmin only for mutations)
+router.post('/:materialId/variants', authenticateToken, requireSuperAdmin, validate(createVariantSchema), materialVariantController.createVariant);
+router.get('/:materialId/variants', authenticateToken, materialVariantController.getVariants);
+
+// Variant ID routes (now under /variants)
+router.get('/variants/:id', authenticateToken, materialVariantController.getVariantById);
+router.put('/variants/:id', authenticateToken, requireSuperAdmin, validate(updateVariantSchema), materialVariantController.updateVariant);
+router.delete('/variants/:id', authenticateToken, requireSuperAdmin, materialVariantController.deleteVariant);
 
 // Update stock for a variant
-router.patch('/material-variants/:id/stock', authenticateToken, materialVariantController.updateStock);
-router.get('/material-variants/:id/stock', authenticateToken, materialVariantController.getStock);
+router.patch('/variants/:id/stock', authenticateToken, validate(updateStockSchema), materialVariantController.updateStock);
+router.get('/variants/:id/stock', authenticateToken, materialVariantController.getStock);
 
 // Get usage forecast
-router.get('/material-variants/usage-forecast', authenticateToken, materialVariantController.getUsageForecast);
+router.get('/usage-forecast', authenticateToken, validate(usageForecastSchema, 'query'), materialVariantController.getUsageForecast);
 
-// Import route
+// Import route (Superadmin only)
 router.post(
-    '/material-variants/import', 
+    '/import', 
+    authenticateToken,
+    requireSuperAdmin,
     upload.single('file'), 
     (req, res, next) => {
         if (!req.file) {    
@@ -55,3 +85,4 @@ router.post(
 );
 
 export default router;
+

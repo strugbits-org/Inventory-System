@@ -4,7 +4,7 @@
  */
 
 import express from 'express';
-import inviteRoutes from '../routes/invites.routes.js';
+import inviteRoutes from '../routes/v1/invites.routes.js';
 import { errorHandler, notFoundHandler } from '../middleware/error.middleware.js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';

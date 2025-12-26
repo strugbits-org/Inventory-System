@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { AppError } from './error.middleware.js';
 import { UserRole } from '../types/index.js';
+import db from '../db/db.service.js';
 
 /**
  * JWT Payload structure
@@ -27,17 +28,26 @@ declare global {
 /**
  * Middleware to verify JWT token and attach user to request
  */
-export const authenticateToken = (
+export const authenticateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
       throw new AppError('Access token is required', 401);
+    }
+
+    // Check if token is blacklisted
+    const isBlacklisted = await db.prisma.tokenBlacklist.findUnique({
+      where: { token },
+    });
+
+    if (isBlacklisted) {
+      throw new AppError('Token has been revoked', 401);
     }
 
     const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;

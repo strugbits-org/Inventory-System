@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -8,54 +9,31 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-interface EnvConfig {
-  NODE_ENV: string;
-  PORT: number;
-  DATABASE_URL: string;
-  JWT_SECRET: string;
-  JWT_EXPIRES_IN: string;
-  JWT_REFRESH_SECRET: string;
-  JWT_REFRESH_EXPIRES_IN: string;
-  SMTP_HOST: string;
-  SMTP_PORT: number;
-  SMTP_USER: string;
-  SMTP_PASS: string;
-  SMTP_FROM: string;
-  FRONTEND_URL: string;
-  INVITE_EXPIRY_HOURS: number;
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.coerce.number().default(3000),
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32),
+  JWT_EXPIRES_IN: z.string().default('1d'),
+  JWT_REFRESH_SECRET: z.string().min(32),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  SMTP_HOST: z.string(),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string(),
+  SMTP_PASS: z.string(),
+  SMTP_FROM: z.string(),
+  FRONTEND_URL: z.string().url(),
+  INVITE_EXPIRY_HOURS: z.coerce.number().default(72),
+});
+
+const _env = envSchema.safeParse(process.env);
+
+if (!_env.success) {
+  console.error('❌ Invalid environment variables:', JSON.stringify(_env.error.format(), null, 2));
+  process.exit(1);
 }
 
-const getEnvVar = (key: string, defaultValue?: string): string => {
-  const value = process.env[key] || defaultValue;
-  if (!value) {
-    throw new Error(`Environment variable ${key} is required but not set`);
-  }
-  return value;
-};
-
-const getEnvVarAsNumber = (key: string, defaultValue?: number): number => {
-  const value = process.env[key];
-  if (!value && defaultValue === undefined) {
-    throw new Error(`Environment variable ${key} is required but not set`);
-  }
-  return value ? parseInt(value, 10) : defaultValue!;
-};
-
-export const env: EnvConfig = {
-  NODE_ENV: getEnvVar('NODE_ENV'),
-  PORT: getEnvVarAsNumber('PORT'),
-  DATABASE_URL: getEnvVar('DATABASE_URL'),
-  JWT_SECRET: getEnvVar('JWT_SECRET'),
-  JWT_EXPIRES_IN: getEnvVar('JWT_EXPIRES_IN'),
-  JWT_REFRESH_SECRET: getEnvVar('JWT_REFRESH_SECRET'),
-  JWT_REFRESH_EXPIRES_IN: getEnvVar('JWT_REFRESH_EXPIRES_IN'),
-  SMTP_HOST: getEnvVar('SMTP_HOST'),
-  SMTP_PORT: getEnvVarAsNumber('SMTP_PORT'),
-  SMTP_USER: getEnvVar('SMTP_USER'),
-  SMTP_PASS: getEnvVar('SMTP_PASS'),
-  SMTP_FROM: getEnvVar('SMTP_FROM'),
-  FRONTEND_URL: getEnvVar('FRONTEND_URL'),
-  INVITE_EXPIRY_HOURS: getEnvVarAsNumber('INVITE_EXPIRY_HOURS', 72),
-};
+export const env = _env.data;
 
 export default env;
+

@@ -138,12 +138,12 @@ export const requireLocationAccess = (
 };
 
 /**
- * Check if user can modify another user
- * - Superadmins can modify anyone
- * - Company admins can modify users in their company
- * - Employees can only modify themselves
+ * Check if user can access another user's data
+ * - Superadmins can access anyone
+ * - Company admins can access users in their company
+ * - Users can access their own data
  */
-export const canModifyUser = (
+export const requireUserAccess = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -159,24 +159,74 @@ export const canModifyUser = (
       throw new AppError('User ID is required', 400);
     }
 
-    // Superadmins can modify anyone
-    if (req.user.role === UserRole.SUPERADMIN) {
+    const currentUser = req.user;
+
+    // Superadmins can access anyone
+    if (currentUser.role === UserRole.SUPERADMIN) {
       return next();
     }
 
-    // Users can modify themselves
-    if (req.user.userId === targetUserId) {
+    // Users can access themselves
+    if (currentUser.userId === targetUserId) {
       return next();
     }
 
-    // Company admins can modify users in their company (would need to verify this with DB)
-    if (req.user.role === UserRole.COMPANY) {
-      // This would require a database check to verify the target user belongs to the same company
-      // For now, we'll allow it and let the controller handle the detailed check
+    // Company admins can access users in their company (detailed check in controller)
+    if (currentUser.role === UserRole.COMPANY) {
       return next();
     }
 
-    throw new AppError('Access denied to modify this user', 403);
+    throw new AppError('Access denied to this user', 403);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Middleware to log superadmin actions for audit purposes
+ */
+export const logSuperAdminAction = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const user = (req as any).user;
+  if (user && user.role === UserRole.SUPERADMIN) {
+    console.log('[SUPERADMIN ACTION]', {
+      userId: user.id || user.userId,
+      email: user.email,
+      method: req.method,
+      path: req.path,
+      timestamp: new Date().toISOString(),
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+  next();
+};
+
+/**
+ * Middleware to prevent superadmins from being modified by non-superadmins
+ */
+export const protectSuperAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const user = (req as any).user;
+    // If the current user is not a superadmin, they cannot modify superadmin accounts
+    if (user && user.role !== UserRole.SUPERADMIN) {
+      // Check if trying to set role to SUPERADMIN
+      if (req.body.role === UserRole.SUPERADMIN) {
+        throw new AppError(
+          'Cannot assign superadmin role. Only superadmins can create other superadmins.',
+          403
+        );
+      }
+    }
+
+    next();
   } catch (error) {
     next(error);
   }

@@ -1,58 +1,83 @@
 import { Request, Response, NextFunction } from 'express';
-import Joi from 'joi';
 import AuthService from '../../services/auth/auth.service.js';
+import ApiResponse from '../../utils/response.js';
+import { AppError } from '../../middleware/error.middleware.js';
 
 class AuthController {
     private authService: AuthService;
 
-    constructor() {
-        this.authService = new AuthService();
+    constructor(authService: AuthService = new AuthService()) {
+        this.authService = authService;
     }
 
     /**
-     * POST /auth/login
-     * Login user with email and password
+     * @openapi
+     * /auth/login:
+     *   post:
+     *     summary: Login user
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [email, password]
+     *             properties:
+     *               email:
+     *                 type: string
+     *               password:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Login successful
+     *       401:
+     *         description: Invalid credentials
      */
     login = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Check if request body exists
-            if (!req.body || Object.keys(req.body).length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Request body is required',
-                });
+            const { email, password } = req.body;
+            const result = await this.authService.login(email, password);
+
+            return res.status(200).json(ApiResponse.success(result, 'Login successful'));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * @openapi
+     * /auth/logout:
+     *   post:
+     *     summary: Logout user
+     *     tags: [Auth]
+     *     security:
+     *       - bearerAuth: []
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               refreshToken:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Logged out successfully
+     */
+    logout = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const authHeader = req.headers.authorization;
+            const accessToken = authHeader && authHeader.split(' ')[1];
+            const { refreshToken } = req.body;
+
+            if (!accessToken) {
+                throw new AppError('Access token is required', 400);
             }
 
-            const schema = Joi.object({
-                email: Joi.string().email().required(),
-                password: Joi.string().required(),
-            });
+            await this.authService.logout(accessToken, refreshToken);
 
-            const { error, value } = schema.validate(req.body);
-
-            if (error) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Validation error',
-                    errors: error.details.map((detail) => detail.message),
-                });
-            }
-
-            // Additional safety check for value object
-            if (!value || !value.email || !value.password) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email and password are required',
-                });
-            }
-
-            const result = await this.authService.login(value.email, value.password);
-
-            return res.status(200).json({
-                success: true,
-                message: 'Login successful',
-                data: result,
-            });
+            return res.status(200).json(ApiResponse.success(null, 'Logged out successfully'));
         } catch (error) {
             next(error);
         }

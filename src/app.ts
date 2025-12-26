@@ -1,11 +1,33 @@
 import express, { Application, Request, Response } from 'express';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env.js';
 import logger from './config/logger.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import routes from './routes/index.js';
+import { swaggerSpec } from './config/swagger.js';
 
 export const createApp = (): Application => {
     const app: Application = express();
+
+    // Security middlewares
+    app.use(helmet());
+    
+    // API Documentation
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    
+    // Rate limiting
+    const limiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: 'Too many requests from this IP, please try again after 15 minutes',
+    });
+    
+    // Apply rate limiter to all routes
+    app.use('/api', limiter);
 
     app.set('trust proxy', 1);
 

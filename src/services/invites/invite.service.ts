@@ -14,7 +14,7 @@ interface InviteTokenPayload {
   exp: number;
 }
 
-class InviteService {
+export class InviteService {
   /**
    * Create a company invite
    * Validates email uniqueness, generates token, stores invite, and sends email

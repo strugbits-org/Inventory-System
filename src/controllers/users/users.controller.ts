@@ -1,19 +1,21 @@
-import { Request, Response } from 'express';
-import UsersService from '../../services/user/users.service.js';
+import { Request, Response, NextFunction } from 'express';
+import UsersService from '../../services/users/users.service.js';
 import { UserRole } from '@prisma/client';
+import ApiResponse from '../../utils/response.js';
+import { AppError } from '../../middleware/error.middleware.js';
 
 class UsersController {
     private usersService: UsersService;
 
-    constructor() {
-        this.usersService = new UsersService();
+    constructor(usersService: UsersService = new UsersService()) {
+        this.usersService = usersService;
     }
 
     /**
      * Get user by ID
      * Accessible by: SUPERADMIN (all users), COMPANY (same company users), EMPLOYEE (own data)
      */
-    async getUserById(req: Request, res: Response) {
+    getUserById = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const currentUser = (req as any).user;
@@ -21,10 +23,7 @@ class UsersController {
             // Fetch user
             const user = await this.usersService.getUserById(id);
             if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'User not found'
-                });
+                throw new AppError('User not found', 404);
             }
 
             // Access control
@@ -32,28 +31,18 @@ class UsersController {
                 // Superadmin can access any user
             } else if (currentUser.role === UserRole.COMPANY && currentUser.companyId === user.companyId) {
                 // Company admin can access users in their company
-            } else if (currentUser.id === id) {
+            } else if (currentUser.userId === id) { // Fixed: using currentUser.userId instead of currentUser.id
                 // User can access their own data
             } else {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Access denied'
-                });
+                throw new AppError('Access denied', 403);
             }
 
             // Remove password from response
             const { password, ...userWithoutPassword } = user;
 
-            return res.status(200).json({
-                success: true,
-                message: 'User retrieved successfully',
-                data: userWithoutPassword
-            });
+            return res.status(200).json(ApiResponse.success(userWithoutPassword, 'User retrieved successfully'));
         } catch (error: any) {
-            return res.status(500).json({
-                success: false,
-                message: error.message || 'Internal server error'
-            });
+            next(error);
         }
     }
 
@@ -61,7 +50,7 @@ class UsersController {
      * Get users by company ID with pagination
      * Accessible by: SUPERADMIN (all companies), COMPANY (own company only)
      */
-    async getUsersByCompanyId(req: Request, res: Response) {
+    getUsersByCompanyId = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { companyId } = req.params;
             const { page, limit } = req.query;
@@ -69,10 +58,7 @@ class UsersController {
 
             // Access control
             if (currentUser.role !== UserRole.SUPERADMIN && currentUser.companyId !== companyId) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Access denied'
-                });
+                throw new AppError('Access denied', 403);
             }
 
             // Fetch paginated users
@@ -97,19 +83,12 @@ class UsersController {
                 }
             );
 
-            return res.status(200).json({
-                success: true,
-                message: 'Users retrieved successfully',
-                data: result.data,
-                pagination: result.pagination
-            });
+            return res.status(200).json(ApiResponse.paginated(result.data, result.pagination, 'Users retrieved successfully'));
         } catch (error: any) {
-            return res.status(500).json({
-                success: false,
-                message: error.message || 'Internal server error'
-            });
+            next(error);
         }
     }
 }
 
 export default new UsersController();
+

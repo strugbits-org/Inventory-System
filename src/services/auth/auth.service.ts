@@ -1,7 +1,8 @@
-import UsersService from '../user/users.service.js';
+import UsersService from '../users/users.service.js';
 import { prisma } from '../../db/db.service.js';
 import JwtService from '../jwt/jwt.service.js';
 import { comparePassword } from '../../utils/helpers.js';
+import jwt from 'jsonwebtoken';
 
 interface LoginResponse {
     userId: string;
@@ -75,6 +76,39 @@ class AuthService {
             ...tokens,
             user: userWithoutPassword
         };
+    }
+
+    /**
+     * Logout user by blacklisting tokens
+     */
+    async logout(accessToken: string, refreshToken?: string): Promise<boolean> {
+        // Blacklist access token
+        const accessDecoded = jwt.decode(accessToken) as any;
+        const accessExpiry = accessDecoded?.exp ? new Date(accessDecoded.exp * 1000) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await prisma.tokenBlacklist.create({
+            data: {
+                token: accessToken,
+                expiresAt: accessExpiry,
+                reason: 'Logout',
+            },
+        });
+
+        // Blacklist refresh token if provided
+        if (refreshToken) {
+            const refreshDecoded = jwt.decode(refreshToken) as any;
+            const refreshExpiry = refreshDecoded?.exp ? new Date(refreshDecoded.exp * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+            await prisma.tokenBlacklist.create({
+                data: {
+                    token: refreshToken,
+                    expiresAt: refreshExpiry,
+                    reason: 'Logout',
+                },
+            });
+        }
+
+        return true;
     }
 }
 

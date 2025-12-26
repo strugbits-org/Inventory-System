@@ -3,7 +3,7 @@ import { prisma } from '../../db/db.service.js';
 import inviteService from '../invites/invite.service.js';
 import { hashPassword } from '../../utils/helpers.js';
 
-class CompaniesService {
+export class CompaniesService {
 
   /**
    * Create a company from an invite token

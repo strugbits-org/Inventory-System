@@ -28,7 +28,7 @@ interface UpdateJobData {
   locationId?: string;
 }
 
-class JobsService {
+export class JobsService {
 
   /**
    * Create a new job

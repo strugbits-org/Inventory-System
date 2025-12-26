@@ -236,3 +236,15 @@ model CompanyOverageOverride {
 
   @@unique([companyId, variantId])
 }
+
+model TokenBlacklist {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  reason    String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([expiresAt])
+}
+
