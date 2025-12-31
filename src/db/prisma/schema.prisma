@@ -35,6 +35,8 @@ model User {
   password  String
   firstName String
   lastName  String
+  phone     String?
+  address   String?
   role      UserRole
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
