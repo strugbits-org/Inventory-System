@@ -36,13 +36,18 @@ class MaterialVariantController {
    */
   getAllVariants = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { includeInactive } = req.query;
+      const { includeInactive, type, page, limit } = req.query;
+      const search = req.query.search || req.query.q || req.query.query;
 
-      const variants = await this.materialVariantService.getAllMaterialVariants(
-        includeInactive === 'true'
-      );
+      const result = await this.materialVariantService.getAllMaterialVariants({
+        includeInactive: includeInactive === 'true',
+        search: search as string | undefined,
+        types: type as string[] | undefined,
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 10
+      });
 
-      return res.status(200).json(ApiResponse.success(variants));
+      return res.status(200).json(ApiResponse.paginated(result.variants, result.meta));
     } catch (error) {
       next(error);
     }

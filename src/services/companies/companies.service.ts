@@ -125,7 +125,7 @@ export class CompaniesService {
   /**
    * List companies with pagination and filtering
    */
-  async listCompanies(params: { page?: number; limit?: number; isActive?: boolean }) {
+  async listCompanies(params: { page?: number; limit?: number; isActive?: boolean, search?: string }) {
       const page = params.page || 1;
       const limit = params.limit || 10;
       const skip = (page - 1) * limit;
@@ -133,6 +133,25 @@ export class CompaniesService {
       const where: Prisma.CompanyWhereInput = {};
       if (params.isActive !== undefined) {
           where.isActive = params.isActive;
+      }
+
+      if (params.search) {
+        const search = params.search.trim();
+
+        where.OR = [
+            {
+                name: {
+                contains: search,
+                mode: 'insensitive'
+                }
+            },
+            {
+                email: {
+                contains: search,
+                mode: 'insensitive'
+                }
+            }
+        ];
       }
 
       const [total, companies] = await Promise.all([
