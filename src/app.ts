@@ -41,9 +41,6 @@ export const createApp = (): Application => {
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Static file serving for uploads
-    app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
     // Request logging middleware
     app.use((req: Request, res: Response, next) => {
         const start = Date.now();
@@ -69,6 +66,9 @@ export const createApp = (): Application => {
 
         next();
     });
+
+    // Static file serving for uploads
+    app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
     // Health check endpoint
     app.get('/health', (req: Request, res: Response) => {
