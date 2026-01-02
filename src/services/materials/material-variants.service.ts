@@ -70,18 +70,70 @@ export class MaterialVariantService {
   /**
    * Get all material variants
    */
-  async getAllMaterialVariants(includeInactive = false) {
-    const where: Prisma.MaterialVariantWhereInput = {
-      ...(!includeInactive && { isActive: true }),
-    };
+  async getAllMaterialVariants(params: {
+    page?: number;
+    limit?: number;
+    includeInactive?: boolean;
+    search?: string;
+    types?: string | string[];
+  }) {
+    const {
+      page = 1,
+      limit = 10,
+      includeInactive = false,
+      search,
+      types
+    } = params;
+    const skip = (page - 1) * limit;
 
-    return db.prisma.materialVariant.findMany({
-      where,
-      orderBy: { name: 'asc' },
-      include: {
-        material: true
-      }
-    });
+    const where: Prisma.MaterialVariantWhereInput = {};
+
+    if (!includeInactive) {
+      where.isActive = true;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { color: { contains: search, mode: 'insensitive' } },
+        { type: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    
+    if (types && types.length > 0) {
+        const typeArray = Array.isArray(types) ? types : [types];
+        if (typeArray.length > 0) {
+            where.material = {
+                name: {
+                    in: typeArray,
+                    mode: 'insensitive'
+                }
+            }
+        }
+    }
+
+    const [total, variants] = await db.prisma.$transaction([
+      db.prisma.materialVariant.count({ where }),
+      db.prisma.materialVariant.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+        include: {
+          material: true,
+        },
+      }),
+    ]);
+
+    return {
+      variants,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   /**
