@@ -12,16 +12,17 @@ const updateProfileSchema = Joi.object({
     phone: Joi.string().allow('').optional(),
     address: Joi.string().allow('').optional(),
     password: Joi.string().min(6).optional(),
+    profileImage: Joi.string().optional(),
 });
 
 // Get Profile
-router.get('/', 
+router.get('/',
     authenticateToken,
     profileController.getProfile
 );
 
 // Update Profile
-router.patch('/', 
+router.patch('/',
     authenticateToken,
     validate(updateProfileSchema),
     profileController.updateProfile
