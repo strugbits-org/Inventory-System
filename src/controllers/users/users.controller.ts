@@ -53,8 +53,9 @@ class UsersController {
     getUsersByCompanyId = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { companyId } = req.params;
-            const { page, limit } = req.query;
+            const { page, limit, isEmployeeOnly } = req.query;
             const currentUser = (req as any).user;
+
 
             // Access control
             if (currentUser.role !== UserRole.SUPERADMIN && currentUser.companyId !== companyId) {
@@ -64,9 +65,11 @@ class UsersController {
             // Fetch paginated users
             const result = await this.usersService.getUsersByCompanyId(
                 companyId,
+
                 {
                     page: page ? Number(page) : 1,
-                    limit: limit ? Number(limit) : 10
+                    limit: limit ? Number(limit) : 10,
+
                 },
                 {
                     id: true,
@@ -80,10 +83,103 @@ class UsersController {
                     createdAt: true,
                     updatedAt: true
                     // Explicitly exclude password
-                }
+                },
+                isEmployeeOnly ? true : false,
             );
 
             return res.status(200).json(ApiResponse.paginated(result.data, result.pagination, 'Users retrieved successfully'));
+        } catch (error: any) {
+            next(error);
+        }
+    }
+    /**
+     * Create user (Company Admin only - Restricted via Route Middleware)
+     */
+    createUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { email, name, locationId } = req.body;
+            const currentUser = (req as any).user;
+
+            // Validation
+            if (!email || !name) {
+                throw new AppError('Email and Name are required', 400);
+            }
+
+            // Get company ID from current user (Company Admin)
+            const companyId = currentUser.companyId;
+
+            const user = await this.usersService.createUser({
+                email,
+                name,
+                companyId,
+                locationId
+            });
+
+            // Remove password from response
+            const { password, ...userWithoutPassword } = user;
+
+            return res.status(201).json(ApiResponse.success(userWithoutPassword, 'User created successfully. Credentials sent via email.'));
+        } catch (error: any) {
+            next(error);
+        }
+    }
+
+    /**
+     * Update user (Company Admin only - Restricted via Route Middleware)
+     */
+    updateUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const currentUser = (req as any).user;
+            const updates = req.body;
+
+            // Check if user belongs to same company
+            const targetUser = await this.usersService.getUserById(id);
+            if (!targetUser) {
+                throw new AppError('User not found', 404);
+            }
+
+            if (currentUser.role !== UserRole.SUPERADMIN && targetUser.companyId !== currentUser.companyId) {
+                throw new AppError('Access denied', 403);
+            }
+
+            const updatedUser = await this.usersService.updateUser(id, updates);
+
+            // Remove password from response
+            const { password, ...userWithoutPassword } = updatedUser;
+
+            return res.status(200).json(ApiResponse.success(userWithoutPassword, 'User updated successfully'));
+        } catch (error: any) {
+            next(error);
+        }
+    }
+
+    /**
+     * Delete user (Company Admin only - Restricted via Route Middleware)
+     */
+    deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const currentUser = (req as any).user;
+
+            // Check if user belongs to same company
+            const targetUser = await this.usersService.getUserById(id);
+            if (!targetUser) {
+                throw new AppError('User not found', 404);
+            }
+
+            // Prevent deleting yourself
+            if (currentUser.id === id || currentUser.userId === id) {
+                throw new AppError('You cannot delete yourself', 400);
+            }
+
+            if (currentUser.role !== UserRole.SUPERADMIN && targetUser.companyId !== currentUser.companyId) {
+                throw new AppError('Access denied', 403);
+            }
+
+            await this.usersService.deleteUser(id);
+
+            return res.status(200).json(ApiResponse.success(null, 'User deleted successfully'));
         } catch (error: any) {
             next(error);
         }
