@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { companyInviteEmailTemplate } from './email-templates/company-invite.template.js';
+import { newUserCredentialsEmailTemplate } from './email-templates/new-user-credentials.template.js';
 
 interface SendInviteEmailParams {
   to: string;
@@ -57,5 +58,33 @@ export const testEmailConfig = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Email configuration error:', error);
     return false;
+  }
+};
+
+interface SendNewUserCredentialsEmailParams {
+  to: string;
+  name: string;
+  companyName: string;
+  loginUrl: string;
+  password: string;
+}
+
+export const sendNewUserCredentialsEmail = async (params: SendNewUserCredentialsEmailParams): Promise<void> => {
+  const { to, name, companyName, loginUrl, password } = params;
+
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: `"${process.env.APP_NAME || 'ResinWerks'}" <${process.env.SMTP_USER}>`,
+    to,
+    subject: `Welcome to ${companyName} - Your Login Credentials`,
+    html: newUserCredentialsEmailTemplate({ name, companyName, loginUrl, email: to, password }),
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Credentials email sent successfully:', info.messageId);
+  } catch (error) {
+    console.error('Error sending credentials email:', error);
   }
 };
