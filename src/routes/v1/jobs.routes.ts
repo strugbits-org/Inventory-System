@@ -18,7 +18,13 @@ const createJobSchema = Joi.object({
   date: Joi.date().iso().required(),
   installDate: Joi.date().iso().required(),
   jobCost: Joi.number().optional(),
-  locationId: Joi.string().required(),
+  jobMaterials: Joi.array().items(Joi.object({
+    variantId: Joi.string().required(),
+    quantityUsed: Joi.number().required(),
+    cost: Joi.number().required(),
+    additionalQty: Joi.number().required(),
+    additionalCost: Joi.number().required(),
+  })).length(3).required(),
 });
 
 const updateJobSchema = Joi.object({
@@ -31,7 +37,6 @@ const updateJobSchema = Joi.object({
   date: Joi.date().iso().optional(),
   installDate: Joi.date().iso().optional(),
   jobCost: Joi.number().optional(),
-  locationId: Joi.string().optional(),
 });
 
 const updateStatusSchema = Joi.object({
@@ -44,6 +49,13 @@ router.post('/', authenticateToken, requireCompanyAdmin, validate(createJobSchem
 // List Jobs - Authenticated users (Filter logic in service)
 router.get('/', authenticateToken, jobsController.listJobs);
 
+// --- Archived Jobs ---
+// List Archived Jobs
+router.get('/archived', authenticateToken, jobsController.listArchivedJobs);
+
+// Get Archived Job by ID
+router.get('/archived/:id', authenticateToken, jobsController.getArchivedJobById);
+
 // Get Job - Authenticated users (Filter logic in service)
 router.get('/:id', authenticateToken, jobsController.getJob);
 
@@ -52,6 +64,9 @@ router.patch('/:id', authenticateToken, requireCompanyAdmin, validate(updateJobS
 
 // Update Job Status - Company Admin only
 router.patch('/:id/status', authenticateToken, requireCompanyAdmin, validate(updateStatusSchema), jobsController.updateStatus);
+
+// Archive Job (Soft Delete) - Company Admin only
+router.delete('/:id', authenticateToken, requireCompanyAdmin, jobsController.archiveJob);
 
 export default router;
 

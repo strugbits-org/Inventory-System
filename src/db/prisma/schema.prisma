@@ -23,9 +23,11 @@ enum UserRole {
 
 enum JobStatus {
   PENDING
-  IN_PROGRESS
+  ORDERED
   COMPLETED
+  HOLD
   CANCELLED
+  ARCHIVED
 }
 
 // Models
@@ -160,7 +162,7 @@ model MaterialVariant {
   jobMaterials     JobMaterial[]
   overageOverrides CompanyOverageOverride[]
 
-  @@unique([materialId, name])
+  @@unique([materialId, name, color])
   @@index([materialId])
 }
 
@@ -213,15 +215,17 @@ model Job {
 }
 
 model JobMaterial {
-  id           String   @id @default(uuid())
-  jobId        String
-  materialId   String
-  variantId    String
-  quantityUsed Decimal  @db.Decimal(10, 2)
-  unit         String
-  costAtTime   Decimal  @db.Decimal(10, 2)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(uuid())
+  jobId          String
+  materialId     String
+  variantId      String
+  quantityUsed   Decimal  @db.Decimal(10, 2)
+  unit           String
+  costAtTime     Decimal  @db.Decimal(10, 2)
+  additionalQty  Decimal? @default(0) @db.Decimal(10, 2)
+  additionalCost Decimal? @default(0) @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   job      Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
   material Material        @relation(fields: [materialId], references: [id], onDelete: Restrict)

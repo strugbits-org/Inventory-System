@@ -52,13 +52,14 @@ class JobsController {
   listJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
-      const { page, limit, companyId, status } = req.query;
+      const { page, limit, companyId, status, search } = req.query;
 
       const result = await this.jobsService.listJobs({
         page: page ? Number(page) : 1,
         limit: limit ? Number(limit) : 10,
         companyId: companyId as string,
-        status: status as any
+        status: status as any,
+        search: search as string,
       }, user);
 
       return res.status(200).json(ApiResponse.paginated(result.jobs, result.meta));
@@ -96,6 +97,63 @@ class JobsController {
 
       const updatedJob = await this.jobsService.updateJobStatus(id, status, user);
       return res.status(200).json(ApiResponse.success(updatedJob, 'Job status updated successfully'));
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * Archive Job
+   * Route: DELETE /jobs/:id
+   */
+  archiveJob = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+
+      const archivedJob = await this.jobsService.archiveJob(id, user);
+      return res.status(200).json(ApiResponse.success(archivedJob, 'Job archived successfully'));
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * List Archived Jobs
+   * Route: GET /jobs/archived
+   */
+  listArchivedJobs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      const { page, limit, companyId } = req.query;
+
+      const result = await this.jobsService.listArchivedJobs({
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 10,
+        companyId: companyId as string,
+      }, user);
+
+      return res.status(200).json(ApiResponse.paginated(result.jobs, result.meta));
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get Archived Job By ID
+   * Route: GET /jobs/archived/:id
+   */
+  getArchivedJobById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+
+      const job = await this.jobsService.getArchivedJobById(id, user);
+      if (!job) {
+        throw new AppError('Archived job not found', 404);
+      }
+
+      return res.status(200).json(ApiResponse.success(job));
     } catch (error: any) {
       next(error);
     }
