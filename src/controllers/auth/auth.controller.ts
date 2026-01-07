@@ -116,6 +116,83 @@ class AuthController {
             next(error);
         }
     }
+
+    /**
+     * @openapi
+     * /auth/forgot-password:
+     *   post:
+     *     summary: Request password reset link
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [email]
+     *             properties:
+     *               email:
+     *                 type: string
+     *                 format: email
+     *                 description: User email address
+     *     responses:
+     *       200:
+     *         description: Password reset email sent
+     *       400:
+     *         description: Invalid email
+     */
+    forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { email } = req.body;
+            const result = await this.authService.forgotPassword(email);
+
+            return res.status(200).json(ApiResponse.success(null, result.message));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * @openapi
+     * /auth/reset-password:
+     *   post:
+     *     summary: Reset password with token
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [token, password, confirmPassword]
+     *             properties:
+     *               token:
+     *                 type: string
+     *                 description: Password reset token from email
+     *               password:
+     *                 type: string
+     *                 format: password
+     *                 description: New password (min 6 characters)
+     *               confirmPassword:
+     *                 type: string
+     *                 format: password
+     *                 description: Confirm new password
+     *     responses:
+     *       200:
+     *         description: Password reset successful
+     *       400:
+     *         description: Invalid token or passwords don't match
+     */
+    resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { token, password, confirmPassword } = req.body;
+            const result = await this.authService.resetPassword(token, password, confirmPassword);
+
+            return res.status(200).json(ApiResponse.success(null, result.message));
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new AuthController();

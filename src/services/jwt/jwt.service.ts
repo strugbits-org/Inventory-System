@@ -114,6 +114,54 @@ class JwtService {
             refreshToken,
         };
     }
+
+    /**
+     * Generate password reset token
+     * @param userId User ID
+     * @param email User email
+     * @returns Password reset token (1 hour expiry)
+     */
+    generatePasswordResetToken(userId: string, email: string): string {
+        const payload = {
+            userId,
+            email,
+            purpose: 'password-reset'
+        };
+
+        return jwt.sign(payload, env.JWT_SECRET, {
+            expiresIn: '1h',
+        } as jwt.SignOptions);
+    }
+
+    /**
+     * Verify password reset token
+     * @param token Password reset token
+     * @returns Decoded payload with userId and email
+     * @throws Error if token is invalid, expired, or wrong purpose
+     */
+    verifyPasswordResetToken(token: string): { userId: string; email: string; purpose: string } {
+        try {
+            const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+
+            // Verify purpose
+            if (decoded.purpose !== 'password-reset') {
+                throw new Error('Invalid token purpose');
+            }
+
+            return {
+                userId: decoded.userId,
+                email: decoded.email,
+                purpose: decoded.purpose
+            };
+        } catch (error) {
+            if (error instanceof jwt.JsonWebTokenError) {
+                throw new Error('Invalid reset token');
+            } else if (error instanceof jwt.TokenExpiredError) {
+                throw new Error('Reset token has expired');
+            }
+            throw error;
+        }
+    }
 }
 
 export default JwtService;

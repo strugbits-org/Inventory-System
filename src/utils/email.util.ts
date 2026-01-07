@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { companyInviteEmailTemplate } from './email-templates/company-invite.template.js';
 import { newUserCredentialsEmailTemplate } from './email-templates/new-user-credentials.template.js';
+import { forgotPasswordEmailTemplate } from './email-templates/forgot-password.template.js';
 
 interface SendInviteEmailParams {
   to: string;
@@ -86,5 +87,33 @@ export const sendNewUserCredentialsEmail = async (params: SendNewUserCredentials
     console.log('Credentials email sent successfully:', info.messageId);
   } catch (error) {
     console.error('Error sending credentials email:', error);
+  }
+};
+
+interface SendForgotPasswordEmailParams {
+  to: string;
+  name: string;
+  resetLink: string;
+  expiresInMinutes: number;
+}
+
+export const sendForgotPasswordEmail = async (params: SendForgotPasswordEmailParams): Promise<void> => {
+  const { to, name, resetLink, expiresInMinutes } = params;
+
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: `"${process.env.APP_NAME || 'ResinWerks'}" <${process.env.SMTP_USER}>`,
+    to,
+    subject: 'Reset Your Password - ResinWerks',
+    html: forgotPasswordEmailTemplate({ name, resetLink, expiresInMinutes }),
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Password reset email sent successfully:', info.messageId);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw new Error('Failed to send password reset email. Please try again.');
   }
 };
