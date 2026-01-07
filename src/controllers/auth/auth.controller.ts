@@ -82,6 +82,40 @@ class AuthController {
             next(error);
         }
     }
+
+    /**
+     * @openapi
+     * /auth/refresh:
+     *   post:
+     *     summary: Refresh access and refresh tokens
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [refreshToken]
+     *             properties:
+     *               refreshToken:
+     *                 type: string
+     *                 description: Current refresh token
+     *     responses:
+     *       200:
+     *         description: Tokens refreshed successfully
+     *       401:
+     *         description: Invalid or expired refresh token
+     */
+    refresh = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { refreshToken } = req.body;
+            const result = await this.authService.refreshToken(refreshToken);
+
+            return res.status(200).json(ApiResponse.success(result, 'Tokens refreshed successfully'));
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new AuthController();
