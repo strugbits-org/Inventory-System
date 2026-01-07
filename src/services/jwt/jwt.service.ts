@@ -63,6 +63,29 @@ class JwtService {
     }
 
     /**
+     * Decode token without verification (used for getting expiry)
+     * @param token JWT token to decode
+     * @returns Decoded token payload
+     */
+    decodeToken(token: string): any {
+        return jwt.decode(token);
+    }
+
+    /**
+     * Get token expiry date
+     * @param token JWT token
+     * @param defaultHours Default hours to add if no expiry found
+     * @returns Expiry date
+     */
+    getTokenExpiry(token: string, defaultHours: number = 24): Date {
+        const decoded = this.decodeToken(token);
+        if (decoded?.exp) {
+            return new Date(decoded.exp * 1000);
+        }
+        return new Date(Date.now() + defaultHours * 60 * 60 * 1000);
+    }
+
+    /**
      * Create access and refresh tokens for a user
      * @param user User object from database
      * @returns Object containing userId, accessToken (one day), and refreshToken (7 days)

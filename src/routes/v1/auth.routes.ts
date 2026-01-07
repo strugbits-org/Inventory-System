@@ -11,12 +11,19 @@ const loginSchema = Joi.object({
     password: Joi.string().required(),
 });
 
+const refreshTokenSchema = Joi.object({
+    refreshToken: Joi.string().required(),
+});
+
 /**
  * Public routes - no authentication required
  */
 
 // Login route
 authRoutes.post('/login', validate(loginSchema), authController.login);
+
+// Refresh token route
+authRoutes.post('/refresh', validate(refreshTokenSchema), authController.refresh);
 
 // Logout route
 authRoutes.post('/logout', authenticateToken, authController.logout);

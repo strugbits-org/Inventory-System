@@ -91,51 +91,32 @@ class UsersService {
         companyId: string;
         locationId?: string;
     }): Promise<User> {
-        return await db.transaction(async (tx: any) => {
-            // Check if email already exists
-            const existingUser = await tx.user.findUnique({
-                where: { email: data.email }
-            });
+        // Check if email already exists (outside transaction for faster check)
+        const existingUser = await db.findFirst<User>('user', { email: data.email });
 
-            if (existingUser) {
-                // If user exists but is inactive, maybe reactivate? 
-                // For now, throw error as per standard registration flow
-                // But strict requirement says "create", so let's throw if exists.
-                throw new Error('User with this email already exists');
-            }
+        if (existingUser) {
+            throw new Error('User with this email already exists');
+        }
 
-            // Split name into first and last name
-            const nameParts = data.name.trim().split(/\s+/);
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
+        // Split name into first and last name
+        const nameParts = data.name.trim().split(/\s+/);
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
 
-            // Generate random password
-            const passwordLength = 10;
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            let password = '';
-            for (let i = 0; i < passwordLength; i++) {
-                password += characters.charAt(Math.floor(Math.random() * characters.length));
-            }
+        // Generate random password
+        const passwordLength = 10;
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < passwordLength; i++) {
+            password += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
 
-            // Hash password (assuming we have a hashing utility, 
-            // but looking at imports, there isn't one imported. 
-            // I should verify how password hashing is done. 
-            // Usually in auth service. 
-            // For now, I'll store it as is and assume there's a pre-save hook 
-            // or I need to import bcrypt. 
-            // Let's check auth service or existing user creation logic later. 
-            // Wait, looking at file list, I don't see bcrypt imported in service.
-            // I'll import bcryptjs if needed, or check auth.service.
-            // For this step I will assume simple storage or I need to mock it.
-            // Actually, best practice is to hash it.
-            // I will import bcrypt here.)
+        // Hash password
+        const hashedPassword = await import('bcryptjs').then(m => m.hash(password, 10));
 
-            // Re-checking imports.. I don't have bcrypt imported. 
-            // I'll add the import in a separate tool call if needed or just use consistent hashing.
-            // Let's assume for now I will hash it.
-            const hashedPassword = await import('bcryptjs').then(m => m.hash(password, 10));
-
-            const newUser = await tx.user.create({
+        // Create user in transaction (fast DB operation only)
+        const newUser = await db.transaction<User>(async (tx: any) => {
+            return await tx.user.create({
                 data: {
                     email: data.email,
                     password: hashedPassword,
@@ -143,31 +124,35 @@ class UsersService {
                     lastName,
                     companyId: data.companyId,
                     locationId: data.locationId,
-                    role: 'EMPLOYEE', // Default role
+                    role: 'EMPLOYEE',
                     isActive: true,
                 }
             });
+        });
 
-            // Send email with credentials
-            // Late import to avoid circular dependency issues if any, though likely fine at top
+        try {
+            // Send email OUTSIDE transaction to avoid timeout
             const { sendNewUserCredentialsEmail } = await import('../../utils/email.util.js');
 
             // Fetch company name for email
-            const company = await tx.company.findUnique({
-                where: { id: data.companyId },
-                select: { name: true }
-            });
+            const company = await db.findOne<any>('company', { id: data.companyId }, { name: true });
 
             await sendNewUserCredentialsEmail({
                 to: newUser.email,
                 name: `${newUser.firstName} ${newUser.lastName}`,
                 companyName: company?.name || 'ResinWerks',
                 loginUrl: process.env.FRONTEND_URL || 'http://localhost:3000/login',
-                password: password // Send plain password
+                password: password
             });
 
             return newUser;
-        });
+        } catch (emailError) {
+            // If email fails, rollback by deleting the created user
+            await db.delete<User>('user', { id: newUser.id });
+
+            console.error('Failed to send credentials email:', emailError);
+            throw new Error('Failed to send credentials email. User creation rolled back. Please try again.');
+        }
     }
 
     /**
