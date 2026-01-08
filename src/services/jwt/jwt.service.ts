@@ -63,6 +63,29 @@ class JwtService {
     }
 
     /**
+     * Decode token without verification (used for getting expiry)
+     * @param token JWT token to decode
+     * @returns Decoded token payload
+     */
+    decodeToken(token: string): any {
+        return jwt.decode(token);
+    }
+
+    /**
+     * Get token expiry date
+     * @param token JWT token
+     * @param defaultHours Default hours to add if no expiry found
+     * @returns Expiry date
+     */
+    getTokenExpiry(token: string, defaultHours: number = 24): Date {
+        const decoded = this.decodeToken(token);
+        if (decoded?.exp) {
+            return new Date(decoded.exp * 1000);
+        }
+        return new Date(Date.now() + defaultHours * 60 * 60 * 1000);
+    }
+
+    /**
      * Create access and refresh tokens for a user
      * @param user User object from database
      * @returns Object containing userId, accessToken (one day), and refreshToken (7 days)
@@ -90,6 +113,54 @@ class JwtService {
             accessToken,
             refreshToken,
         };
+    }
+
+    /**
+     * Generate password reset token
+     * @param userId User ID
+     * @param email User email
+     * @returns Password reset token (1 hour expiry)
+     */
+    generatePasswordResetToken(userId: string, email: string): string {
+        const payload = {
+            userId,
+            email,
+            purpose: 'password-reset'
+        };
+
+        return jwt.sign(payload, env.JWT_SECRET, {
+            expiresIn: '1h',
+        } as jwt.SignOptions);
+    }
+
+    /**
+     * Verify password reset token
+     * @param token Password reset token
+     * @returns Decoded payload with userId and email
+     * @throws Error if token is invalid, expired, or wrong purpose
+     */
+    verifyPasswordResetToken(token: string): { userId: string; email: string; purpose: string } {
+        try {
+            const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+
+            // Verify purpose
+            if (decoded.purpose !== 'password-reset') {
+                throw new Error('Invalid token purpose');
+            }
+
+            return {
+                userId: decoded.userId,
+                email: decoded.email,
+                purpose: decoded.purpose
+            };
+        } catch (error) {
+            if (error instanceof jwt.JsonWebTokenError) {
+                throw new Error('Invalid reset token');
+            } else if (error instanceof jwt.TokenExpiredError) {
+                throw new Error('Reset token has expired');
+            }
+            throw error;
+        }
     }
 }
 

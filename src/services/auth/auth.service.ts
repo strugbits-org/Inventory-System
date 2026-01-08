@@ -2,7 +2,6 @@ import UsersService from '../users/users.service.js';
 import { prisma } from '../../db/db.service.js';
 import JwtService from '../jwt/jwt.service.js';
 import { comparePassword } from '../../utils/helpers.js';
-import jwt from 'jsonwebtoken';
 
 interface LoginResponse {
     userId: string;
@@ -83,8 +82,7 @@ class AuthService {
      */
     async logout(accessToken: string, refreshToken?: string): Promise<boolean> {
         // Blacklist access token
-        const accessDecoded = jwt.decode(accessToken) as any;
-        const accessExpiry = accessDecoded?.exp ? new Date(accessDecoded.exp * 1000) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const accessExpiry = this.jwtService.getTokenExpiry(accessToken, 24);
 
         await prisma.tokenBlacklist.create({
             data: {
@@ -96,8 +94,7 @@ class AuthService {
 
         // Blacklist refresh token if provided
         if (refreshToken) {
-            const refreshDecoded = jwt.decode(refreshToken) as any;
-            const refreshExpiry = refreshDecoded?.exp ? new Date(refreshDecoded.exp * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            const refreshExpiry = this.jwtService.getTokenExpiry(refreshToken, 168); // 7 days
 
             await prisma.tokenBlacklist.create({
                 data: {
@@ -109,6 +106,188 @@ class AuthService {
         }
 
         return true;
+    }
+
+    /**
+     * Refresh access and refresh tokens
+     * @param refreshToken Current refresh token
+     * @returns New access token and refresh token
+     * @throws Error if token is invalid, expired, or blacklisted
+     */
+    async refreshToken(refreshToken: string): Promise<LoginResponse> {
+        // Validate refresh token format
+        if (!refreshToken || refreshToken.trim().length === 0) {
+            throw new Error('Refresh token is required');
+        }
+
+        // Check if token is blacklisted
+        const isBlacklisted = await prisma.tokenBlacklist.findUnique({
+            where: { token: refreshToken },
+        });
+
+        if (isBlacklisted) {
+            throw new Error('Refresh token has been revoked');
+        }
+
+        // Verify and decode refresh token
+        const decoded = this.jwtService.verifyRefreshToken(refreshToken);
+
+        // Fetch fresh user data from database
+        const user = await prisma.user.findUnique({
+            where: { id: decoded.userId },
+            include: {
+                company: true,
+                location: true
+            }
+        });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        // Check if user is active
+        if (!user.isActive) {
+            throw new Error('User account is disabled');
+        }
+
+        // Check if company is active
+        if (user.companyId && user.company) {
+            if (!user.company.isActive) {
+                throw new Error('Company account is disabled. Please contact support.');
+            }
+        }
+
+        // Blacklist old refresh token (token rotation for security)
+        const refreshExpiry = this.jwtService.getTokenExpiry(refreshToken, 168); // 7 days
+
+        await prisma.tokenBlacklist.create({
+            data: {
+                token: refreshToken,
+                expiresAt: refreshExpiry,
+                reason: 'Token refresh',
+            },
+        });
+
+        // Generate new tokens
+        const tokens = await this.jwtService.createTokens(user);
+
+        // Remove password from user object before returning
+        const { password: _, ...userWithoutPassword } = user;
+
+        return {
+            ...tokens,
+            user: userWithoutPassword
+        };
+    }
+
+    /**
+     * Forgot password - Send reset link to email
+     * @param email User email
+     * @returns Success message
+     * @throws Error if user not found
+     */
+    async forgotPassword(email: string): Promise<{ message: string }> {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            throw new Error('Invalid email address');
+        }
+
+        // Find user by email
+        const user = await prisma.user.findFirst({
+            where: { email },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                isActive: true
+            }
+        });
+
+        if (!user) {
+            throw new Error('If this email exists in our system, you will receive a password reset link');
+        }
+
+        // Check if user is active
+        if (!user.isActive) {
+            throw new Error('Account is disabled. Please contact support.');
+        }
+
+        // Generate password reset token (1 hour expiry)
+        const resetToken = this.jwtService.generatePasswordResetToken(user.id, user.email);
+
+        // Create reset link
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+        // Send email
+        const { sendForgotPasswordEmail } = await import('../../utils/email.util.js');
+        await sendForgotPasswordEmail({
+            to: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            resetLink,
+            expiresInMinutes: 60
+        });
+
+        return {
+            message: 'If this email exists in our system, you will receive a password reset link'
+        };
+    }
+
+    /**
+     * Reset password with token
+     * @param token Password reset token
+     * @param newPassword New password
+     * @param confirmPassword Confirm password
+     * @returns Success message
+     * @throws Error if token invalid or passwords don't match
+     */
+    async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<{ message: string }> {
+        // Validate token
+        if (!token || token.trim().length === 0) {
+            throw new Error('Reset token is required');
+        }
+
+        // Validate passwords
+        if (!newPassword || newPassword.trim().length < 6) {
+            throw new Error('Password must be at least 6 characters long');
+        }
+
+        if (newPassword !== confirmPassword) {
+            throw new Error('Passwords do not match');
+        }
+
+        // Verify token
+        const decoded = this.jwtService.verifyPasswordResetToken(token);
+
+        // Find user
+        const user = await prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { id: true, email: true, isActive: true }
+        });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        // Check if user is active
+        if (!user.isActive) {
+            throw new Error('Account is disabled. Please contact support.');
+        }
+
+        // Hash new password
+        const { hashPassword } = await import('../../utils/helpers.js');
+        const hashedPassword = await hashPassword(newPassword);
+
+        // Update password
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password: hashedPassword }
+        });
+
+        return {
+            message: 'Password reset successful. You can now login with your new password.'
+        };
     }
 }
 
