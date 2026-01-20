@@ -37,7 +37,6 @@ const updateVariantSchema = Joi.object({
     color: Joi.string().optional().allow(null, ''),
     type: Joi.string().optional().allow(null, ''),
     // pricePerGallon removed to prevent editing
-    coverageArea: Joi.number().min(0).optional(),
     overageRate: Joi.number().min(0).optional(),
     isActive: Joi.boolean().optional(),
 });
