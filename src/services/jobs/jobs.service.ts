@@ -168,6 +168,7 @@ export class JobsService {
               select: {
                 name: true,
                 variantId: true, // The integer ID
+                color: true,
               }
             }
           }
@@ -235,6 +236,7 @@ export class JobsService {
               select: {
                 name: true,
                 variantId: true,
+                color: true,
               }
             }
           }
