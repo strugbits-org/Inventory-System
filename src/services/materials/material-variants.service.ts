@@ -283,24 +283,6 @@ export class MaterialVariantService {
       throw new Error('Material variant not found');
     }
 
-    // Check name uniqueness if name is being updated
-    if (data.name && data.name.toLowerCase() !== variant.name.toLowerCase()) {
-      const existing = await db.prisma.materialVariant.findFirst({
-        where: {
-          materialId: variant.materialId,
-          name: {
-            equals: data.name,
-            mode: 'insensitive',
-          },
-          id: { not: id },
-        },
-      });
-
-      if (existing) {
-        throw new Error(`Variant with name "${data.name}" already exists for this material`);
-      }
-    }
-
     const updatedVariant = await db.prisma.materialVariant.update({
       where: { id },
       data,
