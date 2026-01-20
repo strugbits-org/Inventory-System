@@ -13,6 +13,7 @@ interface CreateMaterialVariantInput {
 }
 
 interface UpdateMaterialVariantInput {
+  materialId?: string;
   name?: string;
   color?: string;
   type?: string;
