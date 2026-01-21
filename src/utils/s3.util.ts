@@ -23,6 +23,7 @@ export const uploadToS3 = async (
     Key: key,
     Body: buffer,
     ContentType: contentType,
+    ACL: 'public-read', // Add this line to make the object publicly readable
   });
 
   await s3Client.send(command);
