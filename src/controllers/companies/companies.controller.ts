@@ -63,7 +63,7 @@ class CompaniesController {
               isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
               search: search as string | undefined,
           });
-          return res.status(200).json(ApiResponse.paginated(result.companies, result.meta));
+          return res.status(200).json(ApiResponse.cursorPaginated(result.companies, result.meta));
       } catch (error: any) {
           next(error);
       }

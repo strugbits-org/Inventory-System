@@ -31,6 +31,19 @@ export class ApiResponse {
   }
 
   /**
+   * Helper for cursor-based paginated responses
+   */
+  static cursorPaginated(data: any[], meta: { nextCursor: string | null }, message: string = 'Success') {
+    return {
+      success: true,
+      message,
+      data,
+      meta,
+      statusCode: 200
+    };
+  }
+
+  /**
    * Send an error JSON response
    * @param message Error message
    * @param statusCode HTTP status code (default: 500)

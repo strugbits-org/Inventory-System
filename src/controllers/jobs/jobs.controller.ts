@@ -63,7 +63,7 @@ class JobsController {
         detailed: detailed === 'true',
       }, user);
 
-      return res.status(200).json(ApiResponse.paginated(result.jobs, result.meta));
+      return res.status(200).json(ApiResponse.cursorPaginated(result.jobs, result.meta));
     } catch (error: any) {
       next(error);
     }
@@ -134,7 +134,7 @@ class JobsController {
         companyId: companyId as string,
       }, user);
 
-      return res.status(200).json(ApiResponse.paginated(result.jobs, result.meta));
+      return res.status(200).json(ApiResponse.cursorPaginated(result.jobs, result.meta));
     } catch (error: any) {
       next(error);
     }
