@@ -52,10 +52,10 @@ class JobsController {
   listJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
-      const { page, limit, companyId, status, search, detailed } = req.query;
+      const { cursor, limit, companyId, status, search, detailed } = req.query;
 
       const result = await this.jobsService.listJobs({
-        page: page ? Number(page) : 1,
+        cursor: cursor as string,
         limit: limit ? Number(limit) : 10,
         companyId: companyId as string,
         status: status as any,
@@ -126,10 +126,10 @@ class JobsController {
   listArchivedJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
-      const { page, limit, companyId } = req.query;
+      const { cursor, limit, companyId } = req.query;
 
       const result = await this.jobsService.listArchivedJobs({
-        page: page ? Number(page) : 1,
+        cursor: cursor as string,
         limit: limit ? Number(limit) : 10,
         companyId: companyId as string,
       }, user);

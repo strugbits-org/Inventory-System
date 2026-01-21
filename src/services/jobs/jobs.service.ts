@@ -194,10 +194,9 @@ export class JobsService {
    * List jobs
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
-  async listJobs(params: { page?: number; limit?: number; companyId?: string; status?: JobStatus; search?: string, detailed?: boolean }, user: any) {
-    const page = params.page || 1;
+  async listJobs(params: { cursor?: string, page?: number; limit?: number; companyId?: string; status?: JobStatus; search?: string, detailed?: boolean }, user: any) {
     const limit = params.limit || 10;
-    const skip = (page - 1) * limit;
+    const cursor = params.cursor;
 
     const where: Prisma.JobWhereInput = {};
 
@@ -246,24 +245,21 @@ export class JobsService {
         createdBy: { select: { firstName: true, lastName: true } }
     };
 
-    const [total, jobs] = await Promise.all([
-      prisma.job.count({ where }),
-      prisma.job.findMany({
+    const jobs = await prisma.job.findMany({
         where,
-        skip,
         take: limit,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
         include: includeClause
-      })
-    ]);
+      });
+
+    const nextCursor = jobs.length === limit ? jobs[jobs.length - 1].id : null;
 
     return {
       jobs,
       meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
+        nextCursor
       }
     };
   }
@@ -393,13 +389,11 @@ export class JobsService {
    * List all archived jobs
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
-  async listArchivedJobs(params: { page?: number; limit?: number; companyId?: string }, user: any) {
-    const page = params.page || 1;
+  async listArchivedJobs(params: { cursor?: string, limit?: number; companyId?: string }, user: any) {
     const limit = params.limit || 10;
     
     const listParams = {
       ...params,
-      page,
       limit,
       status: JobStatus.ARCHIVED
     };

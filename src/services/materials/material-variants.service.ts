@@ -152,7 +152,7 @@ export class MaterialVariantService {
    */
   async getAllMaterialVariants(
     params: {
-      page?: number;
+      cursor?: string,
       limit?: number;
       includeInactive?: boolean;
       status?: string;
@@ -162,14 +162,13 @@ export class MaterialVariantService {
     user: JwtPayload,
   ) {
     const {
-      page = 1,
       limit = 10,
       includeInactive = false,
       status,
       search,
-      types
+      types,
+      cursor
     } = params;
-    const skip = (page - 1) * limit;
 
     const where: Prisma.MaterialVariantWhereInput = {};
 
@@ -211,18 +210,17 @@ export class MaterialVariantService {
         }
     }
 
-    // 1. Get total count and paginated variants
-    const [total, variantsWithMaterial] = await db.prisma.$transaction([
-      db.prisma.materialVariant.count({ where }),
-      db.prisma.materialVariant.findMany({
+    // 1. Get paginated variants
+    const variantsWithMaterial = await db.prisma.materialVariant.findMany({
         where,
-        skip,
-orderBy: [{ name: 'asc' }, { id: 'asc' }],
+        take: limit,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
         include: {
           material: true,
         },
-      }),
-    ]);
+      });
     
     // 2. Apply overage rate logic using the helper
     const variantsWithCorrectOverage = await this._applyOverageRates(variantsWithMaterial, user);
@@ -244,13 +242,12 @@ orderBy: [{ name: 'asc' }, { id: 'asc' }],
         isActive: variant.isActive
     }));
 
+    const nextCursor = formattedVariants.length === limit ? formattedVariants[formattedVariants.length - 1].id : null;
+
     return {
       variants: formattedVariants,
       meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        nextCursor,
       },
     };
   }

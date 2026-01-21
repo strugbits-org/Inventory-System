@@ -54,11 +54,11 @@ class CompaniesController {
     */
    listCompanies = async (req: Request, res: Response, next: NextFunction) => {
       try {
-          const { page, limit, isActive } = req.query;
+          const { cursor, limit, isActive } = req.query;
           const search = req.query.search || req.query.q || req.query.query;
 
           const result = await this.companiesService.listCompanies({
-              page: page ? Number(page) : 1,
+              cursor: cursor as string,
               limit: limit ? Number(limit) : 10,
               isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
               search: search as string | undefined,

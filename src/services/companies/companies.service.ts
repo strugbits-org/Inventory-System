@@ -125,10 +125,9 @@ export class CompaniesService {
   /**
    * List companies with pagination and filtering
    */
-  async listCompanies(params: { page?: number; limit?: number; isActive?: boolean, search?: string }) {
-      const page = params.page || 1;
+  async listCompanies(params: { cursor?: string, limit?: number; isActive?: boolean, search?: string }) {
       const limit = params.limit || 10;
-      const skip = (page - 1) * limit;
+      const cursor = params.cursor;
 
       const where: Prisma.CompanyWhereInput = {};
       if (params.isActive !== undefined) {
@@ -154,12 +153,11 @@ export class CompaniesService {
         ];
       }
 
-      const [total, companies] = await Promise.all([
-          prisma.company.count({ where }),
-          prisma.company.findMany({
+      const companies = await prisma.company.findMany({
               where,
-              skip,
               take: limit,
+              skip: cursor ? 1 : 0,
+              cursor: cursor ? { id: cursor } : undefined,
               orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
               include: {
                   companyAdmin: {
@@ -173,16 +171,14 @@ export class CompaniesService {
                       select: { locations: true, users: true }
                   }
               }
-          })
-      ]);
+          });
+
+      const nextCursor = companies.length === limit ? companies[companies.length - 1].id : null;
 
       return {
           companies,
           meta: {
-              total,
-              page,
-              limit,
-              totalPages: Math.ceil(total / limit)
+              nextCursor
           }
       };
   }
