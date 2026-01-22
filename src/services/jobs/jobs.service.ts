@@ -195,12 +195,31 @@ export class JobsService {
     if (!job) return null;
 
     if (user.role === UserRole.SUPERADMIN) {
+      // If jobMaterials exist, transform the array to an object keyed by variantId
+      if (job.jobMaterials) {
+        (job as any).jobMaterials = job.jobMaterials.reduce((acc: any, material: any) => {
+          if (material.variant && material.variant.variantId) {
+            acc[material.variant.variantId] = material;
+          }
+          return acc;
+        }, {});
+      }
       return job;
     }
 
     // Company Admin & Employee Check
     if (job.companyId !== user.companyId) {
       throw new Error('Access denied: Job belongs to another company.');
+    }
+
+    // If jobMaterials exist, transform the array to an object keyed by variantId
+    if (job.jobMaterials) {
+      (job as any).jobMaterials = job.jobMaterials.reduce((acc: any, material: any) => {
+        if (material.variant && material.variant.variantId) {
+          acc[material.variant.variantId] = material;
+        }
+        return acc;
+      }, {});
     }
 
     return job;
@@ -272,8 +291,22 @@ export class JobsService {
 
     const nextCursor = jobs.length === limit ? jobs[jobs.length - 1].id : null;
 
+    // Transform jobMaterials array to object for each job
+    const transformedJobs = jobs.map(job => {
+      if (job.jobMaterials) {
+        (job as any).jobMaterials = job.jobMaterials.reduce((acc: any, material: any) => {
+          if (material.variant && material.variant.variantId) {
+            acc[material.variant.variantId] = material;
+          }
+          return acc;
+        }, {});
+      }
+      return job;
+    });
+
+
     return {
-      jobs,
+      jobs: transformedJobs,
       meta: {
         nextCursor
       }
