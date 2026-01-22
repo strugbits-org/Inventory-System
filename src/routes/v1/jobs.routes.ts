@@ -18,13 +18,14 @@ const createJobSchema = Joi.object({
   date: Joi.date().iso().required(),
   installDate: Joi.date().iso().required(),
   jobCost: Joi.number().optional(),
+  jobTemplateName: Joi.string().optional(), // e.g., 'standard'
   jobMaterials: Joi.array().items(Joi.object({
     variantId: Joi.number().integer().positive().required(),
     quantityUsed: Joi.number().required(),
     cost: Joi.number().required(),
     additionalQty: Joi.number().required(),
     additionalCost: Joi.number().required(),
-  })).length(3).required(),
+  })).min(1).required(),
 });
 
 const updateJobSchema = Joi.object({

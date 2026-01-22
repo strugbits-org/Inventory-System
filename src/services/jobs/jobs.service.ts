@@ -1,6 +1,7 @@
 import { Prisma, JobStatus, UserRole } from '@prisma/client';
 import { prisma } from '../../db/db.service.js';
 import { AppError } from '../../middleware/error.middleware.js';
+import { jobTemplates } from '../../config/job.config.js';
 
 interface CreateJobMaterial {
   variantId: string;
@@ -19,6 +20,7 @@ interface CreateJobData {
   duration: number;
   date: string | Date; // ISO string or Date
   installDate: string | Date;
+  jobTemplateName?: string; // e.g., 'standard'
   jobCost?: number;
   companyId?: string; // Optional if inferred from user
   jobMaterials: CreateJobMaterial[];
@@ -55,7 +57,7 @@ export class JobsService {
     }
 
     const companyId = user.companyId;
-    const locationId = user.locationId; // Extract locationId from user token
+    const locationId = user.locationId;
 
     if (!companyId) {
         throw new AppError('User does not belong to a company.', 400);
@@ -64,7 +66,16 @@ export class JobsService {
         throw new AppError('User is not associated with a location.', 400);
     }
 
-    // 1. Validate Material Variants
+    // Check for duplicate jobId within the same company
+    const existingJob = await prisma.job.findFirst({
+        where: { jobId: data.jobId, companyId: companyId },
+    });
+
+    if (existingJob) {
+        throw new AppError(`Job ID '${data.jobId}' already exists for this company.`, 409);
+    }
+
+    // 1. Validate Material Variants and their types
     const variantIds = data.jobMaterials.map(jm => Number(jm.variantId));
     const materialVariants = await prisma.materialVariant.findMany({
       where: {
@@ -75,7 +86,7 @@ export class JobsService {
         variantId: true,
         type: true,
         materialId: true,
-        material: { // Include the related Material to get the unit
+        material: {
           select: {
             unit: true,
           },
@@ -87,33 +98,38 @@ export class JobsService {
       throw new AppError('One or more material variants not found.', 404);
     }
 
-    const foundTypes = {
-      'base coat': 0,
-      'top coat': 0,
-      'broadcast': 0,
-    };
+    // 2. Validate against Job Template if provided
+    if (data.jobTemplateName) {
+        const template = jobTemplates[data.jobTemplateName];
+        if (!template) {
+            throw new AppError(`Job template '${data.jobTemplateName}' not found.`, 404);
+        }
+
+        const materialTypesInJob = new Map<string, number>();
+        for (const variant of materialVariants) {
+            if (variant.type) {
+                materialTypesInJob.set(variant.type, (materialTypesInJob.get(variant.type) || 0) + 1);
+            }
+        }
+
+        for (const req of template.requirements) {
+            const countInJob = materialTypesInJob.get(req.materialType) || 0;
+            if (countInJob !== req.requiredCount) {
+                throw new AppError(`Job validation failed for template '${data.jobTemplateName}': Expected ${req.requiredCount} of material type '${req.materialType}', but found ${countInJob}.`, 400);
+            }
+        }
+    }
+
     const variantIdToMaterialDetailsMap = new Map<number, typeof materialVariants[0]>();
+    materialVariants.forEach(mv => variantIdToMaterialDetailsMap.set(mv.variantId, mv));
 
-    for (const mv of materialVariants) {
-      if (mv.type && mv.type in foundTypes) {
-        foundTypes[mv.type as 'base coat' | 'top coat' | 'broadcast']++;
-        variantIdToMaterialDetailsMap.set(mv.variantId, mv);
-      } else {
-        throw new AppError(`Invalid or missing material variant type: ${mv.type}`, 400);
-      }
-    }
-
-    if (foundTypes['base coat'] !== 1 || foundTypes['top coat'] !== 1 || foundTypes['broadcast'] !== 1) {
-      throw new AppError('Exactly one base coat, one top coat, and one broadcast material variant are required.', 400);
-    }
-
-    // 2. Create Job and JobMaterials in a transaction
+    // 3. Create Job and JobMaterials in a transaction
     return prisma.$transaction(async (prisma) => {
       const job = await prisma.job.create({
         data: {
           jobId: data.jobId,
           companyId: companyId,
-          locationId: locationId, // Use locationId from token
+          locationId: locationId,
           createdByUserId: user.id || user.userId,
           clientFirstName: data.clientFirstName,
           clientLastName: data.clientLastName,
