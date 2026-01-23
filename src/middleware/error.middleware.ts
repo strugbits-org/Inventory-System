@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
 
 /**
@@ -21,56 +22,50 @@ export class AppError extends Error {
  * Should be registered last in the middleware chain
  */
 export const errorHandler = (
-  err: Error | AppError,
+  err: any, // Using 'any' to easily access properties like 'code' and 'meta'
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   // Default error values
   let statusCode = 500;
-  let message = 'Internal server error';
-  let isOperational = false;
+  let message = 'An unexpected error occurred. Please try again later.';
 
-  // Check if it's our custom AppError
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-    isOperational = err.isOperational;
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002' && err.meta?.target) {
+    const targetFields = (err.meta.target as string[]).join(', ');
+    statusCode = 409; // Conflict
+    message = `The value for the ${targetFields} field(s) already exists. Please use a different value.`;
+  } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    statusCode = 401;
+    message = 'Your session is invalid or has expired. Please log in again.';
   } else if (err.message) {
-    // Use the error message if available
+    // Fallback for generic errors
     message = err.message;
-    // Set appropriate status code based on error message
-    if (message.includes('not found')) {
-      statusCode = 404;
-    } else if (
-      message.includes('already exists') ||
-      message.includes('Invalid') ||
-      message.includes('required')
-    ) {
-      statusCode = 400;
-    } else if (message.includes('unauthorized') || message.includes('Unauthorized')) {
-      statusCode = 401;
-    } else if (message.includes('forbidden') || message.includes('Forbidden')) {
-      statusCode = 403;
-    }
+    // Basic keyword matching for status codes
+    if (message.includes('not found')) statusCode = 404;
+    if (message.includes('Invalid')) statusCode = 400;
+    if (message.includes('unauthorized')) statusCode = 401;
+    if (message.includes('forbidden')) statusCode = 403;
   }
 
-  // Log error for debugging (in production, use a proper logger like Winston)
-  console.error('Error:', {
-    message: err.message,
-    statusCode,
-    timestamp: new Date().toISOString(),
-    path: req.path,
-    method: req.method,
-  });
+  // Log the original error for debugging purposes
+  // Avoid logging in test environment to keep logs clean
+  if (process.env.NODE_ENV !== 'test') {
+    console.error('Error:', {
+      message: err.message,
+      statusCode,
+      path: req.path,
+      method: req.method,
+    });
+  }
 
-  // Send error response
+  // Send a clean, user-friendly error response
   res.status(statusCode).json({
     success: false,
     message,
-    ...(process.env.NODE_ENV === 'development' && {
-      error: err,
-    }),
   });
 };
 
