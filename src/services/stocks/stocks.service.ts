@@ -11,7 +11,6 @@ interface GetStockProjectionParams {
 interface UpdateStockParams {
   user: {
     companyId: string;
-    locationId: string;
   };
   variantId: number;
   inStock: number;
@@ -96,7 +95,7 @@ export class StocksService {
    * Update stock quantity
    */
   async updateStock({ user, variantId, inStock }: UpdateStockParams) {
-    const { companyId, locationId } = user;
+    const { companyId } = user; // Removed locationId as it's not used in CompanyQuantityOverride
 
     // 1. Find the material variant by its integer ID to get the UUID primary key
     const materialVariant = await prisma.materialVariant.findUnique({
@@ -109,27 +108,25 @@ export class StocksService {
       throw new AppError(`Variant with ID ${variantId} not found`, 404);
     }
 
-    // 2. Use the UUID (materialVariant.id) for the upsert operation on the Stock table
-    const upsertedStock = await prisma.stock.upsert({
+    // 2. Use the UUID (materialVariant.id) for the upsert operation on the CompanyQuantityOverride table
+    const upsertedOverride = await prisma.companyQuantityOverride.upsert({
       where: {
-        companyId_locationId_variantId: {
+        companyId_variantId: { // Unique constraint is companyId and variantId (UUID)
           companyId,
-          locationId,
           variantId: materialVariant.id, // Use the string UUID from the looked-up variant
         },
       },
       update: {
-        inStock,
+        quantity: inStock, // Update the 'quantity' field
       },
       create: {
         companyId,
-        locationId,
         variantId: materialVariant.id, // Use the string UUID for the foreign key
-        inStock,
+        quantity: inStock, // Create with the 'quantity' field
       },
     });
 
-    return upsertedStock;
+    return upsertedOverride;
   }
 }
 

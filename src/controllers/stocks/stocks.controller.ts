@@ -40,13 +40,8 @@ class StocksController {
       const { variantId, inStock } = req.body;
       const user = (req as any).user;
 
-      // User must have a locationId in their token to upsert stock
-      if (!user.locationId) {
-        throw new AppError('User is not associated with a location.', 400);
-      }
-
       const upsertedStock = await this.stocksService.updateStock({
-        user,
+        user: { companyId: user.companyId }, // Pass only companyId as locationId is no longer needed
         variantId,
         inStock,
       });
