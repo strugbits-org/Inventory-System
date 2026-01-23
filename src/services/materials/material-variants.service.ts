@@ -89,7 +89,8 @@ export class MaterialVariantService {
     variants: any[],
     user: JwtPayload,
   ) {
-    if (user.role !== UserRole.COMPANY || !user.companyId) {
+    const isCompanyUser = user.role === UserRole.COMPANY || user.role === UserRole.EMPLOYEE;
+    if (!isCompanyUser || !user.companyId) {
       return variants; // Return original variants if not a company user
     }
 
@@ -120,7 +121,8 @@ export class MaterialVariantService {
     variants: (Prisma.MaterialVariantGetPayload<{ include: { material: true } }>)[],
     user: JwtPayload,
   ) {
-    if (user.role !== UserRole.COMPANY || !user.companyId) {
+    const isCompanyUser = user.role === UserRole.COMPANY || user.role === UserRole.EMPLOYEE;
+    if (!isCompanyUser || !user.companyId) {
       return variants; // Return original variants if not a company user
     }
 

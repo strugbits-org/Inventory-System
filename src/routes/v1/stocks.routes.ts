@@ -2,7 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 import stocksController from '../../controllers/stocks/stocks.controller.js';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
-import { requireCompanyAdmin } from '../../middleware/rbac.js';
+import { requireCompanyAdmin, requireEmployeeOrCompanyAdmin } from '../../middleware/rbac.js';
 import { validate } from '../../middleware/validation.middleware.js';
 
 const router = express.Router();
@@ -18,7 +18,7 @@ const stockUpsertSchema = Joi.object({
 });
 
 // Get stock projection for a date range
-router.get('/projection', authenticateToken, requireCompanyAdmin, validate(projectionSchema, 'query'), stocksController.getStockProjection);
+router.get('/projection', authenticateToken, requireEmployeeOrCompanyAdmin, validate(projectionSchema, 'query'), stocksController.getStockProjection);
 
 // Upsert stock quantity for a user's location
 router.post('/', authenticateToken, requireCompanyAdmin, validate(stockUpsertSchema), stocksController.updateStock);
