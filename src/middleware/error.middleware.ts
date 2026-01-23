@@ -34,10 +34,16 @@ export const errorHandler = (
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-  } else if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002' && err.meta?.target) {
+  } else if (err.code === 'P2002' && err.meta?.target) { // Prisma Unique Constraint Error
     const targetFields = (err.meta.target as string[]).join(', ');
     statusCode = 409; // Conflict
     message = `The value for the ${targetFields} field(s) already exists. Please use a different value.`;
+  } else if (err.code === 'P2003' && err.meta?.field_name) { // Prisma Foreign Key Constraint Error
+    statusCode = 400; // Bad Request
+    message = `Operation failed. A related record for the '${err.meta.field_name}' field does not exist.`;
+  } else if (err.code === 'P2025') { // Prisma Record to Update/Delete Not Found
+    statusCode = 404; // Not Found
+    message = 'The operation failed because the requested record could not be found.';
   } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     statusCode = 401;
     message = 'Your session is invalid or has expired. Please log in again.';
