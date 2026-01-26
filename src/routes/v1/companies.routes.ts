@@ -20,6 +20,15 @@ const createCompanySchema = Joi.object({
 const updateCompanySchema = Joi.object({
     name: Joi.string().optional(),
     approvedBySuperadmin: Joi.boolean().optional(),
+    location: Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().optional(),
+        street: Joi.string().optional().allow(null, ''),
+        city: Joi.string().optional().allow(null, ''),
+        state: Joi.string().optional().allow(null, ''),
+        postalCode: Joi.string().optional().allow(null, ''),
+        country: Joi.string().optional().allow(null, ''),
+    }).optional(),
 });
 
 const toggleStatusSchema = Joi.object({

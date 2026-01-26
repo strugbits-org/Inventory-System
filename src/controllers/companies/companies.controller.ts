@@ -77,14 +77,14 @@ class CompaniesController {
   updateCompany = async (req: Request, res: Response, next: NextFunction) => {
       try {
           const { id } = req.params;
-          const { name, approvedBySuperadmin } = req.body;
+          const { name, approvedBySuperadmin, location } = req.body;
           const user = (req as any).user;
 
           // Access Logic
           if (user.role === UserRole.SUPERADMIN) {
-              // Can update everything
+              // Superadmin can update everything
           } else if (user.role === UserRole.COMPANY && user.companyId === id) {
-              // Can only update name
+              // Company admin can only update their own company's name and location
               if (approvedBySuperadmin !== undefined) {
                   throw new AppError('Only superadmin can approve companies', 403);
               }
@@ -92,7 +92,13 @@ class CompaniesController {
                throw new AppError('Access denied', 403);
           }
 
-          const updated = await this.companiesService.updateCompany(id as string, { name, approvedBySuperadmin });
+          const updated = await this.companiesService.updateCompanyAndLocation(
+            id as string, 
+            user,
+            { name, approvedBySuperadmin }, 
+            location
+          );
+          
           return res.status(200).json(ApiResponse.success(updated, 'Company updated successfully'));
       } catch (error: any) {
           next(error);

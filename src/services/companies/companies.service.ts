@@ -2,6 +2,8 @@ import { Prisma, UserRole } from '@prisma/client';
 import { prisma } from '../../db/db.service.js';
 import inviteService from '../invites/invite.service.js';
 import { hashPassword } from '../../utils/helpers.js';
+import { AppError } from '../../middleware/error.middleware.js';
+import { JwtPayload } from '../../middleware/jwtAuth.js';
 
 export class CompaniesService {
 
@@ -181,6 +183,70 @@ export class CompaniesService {
               nextCursor
           }
       };
+  }
+
+  /**
+   * Update company and optionally a location in a single transaction
+   */
+  async updateCompanyAndLocation(
+    companyId: string, 
+    user: JwtPayload,
+    companyData: { name?: string; approvedBySuperadmin?: boolean }, 
+    locationData?: { id: string; name?: string; street?: string; city?: string; state?: string; postalCode?: string; country?: string }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      let updatedCompany = null;
+      let updatedLocation = null;
+
+      // 1. Update Company details if provided
+      if (companyData.name) {
+        updatedCompany = await tx.company.update({
+          where: { id: companyId },
+          data: { name: companyData.name },
+        });
+      }
+
+      // If user is superadmin, they can also approve
+      if (user.role === UserRole.SUPERADMIN && companyData.approvedBySuperadmin !== undefined) {
+        updatedCompany = await tx.company.update({
+          where: { id: companyId },
+          data: { approvedBySuperadmin: companyData.approvedBySuperadmin },
+        });
+      }
+
+      // 2. Update Location details if provided
+      if (locationData) {
+        const { id: locationId, ...locationFieldsToUpdate } = locationData;
+
+        // Security check: Ensure the location belongs to the company, unless user is a superadmin
+        if (user.role !== UserRole.SUPERADMIN) {
+          const location = await tx.location.findUnique({
+            where: { id: locationId },
+            select: { companyId: true },
+          });
+
+          if (!location || location.companyId !== user.companyId) {
+            throw new AppError('Location not found or access denied.', 404);
+          }
+        }
+        
+        // Only update if there are fields to update
+        if (Object.keys(locationFieldsToUpdate).length > 0) {
+            updatedLocation = await tx.location.update({
+                where: { id: locationId },
+                data: locationFieldsToUpdate,
+            });
+        }
+      }
+
+      // 3. Fetch the final state of the company to return all data
+      const finalCompanyState = await tx.company.findUnique({
+          where: { id: companyId },
+          include: { locations: true, companyAdmin: true },
+      });
+
+      return finalCompanyState;
+    });
   }
 }
 
