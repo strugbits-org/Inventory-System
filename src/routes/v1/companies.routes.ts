@@ -46,12 +46,12 @@ router.get('/',
 );
 
 // Toggle Enable/Disable - Superadmin only
-router.patch('/:id/status', 
-    authenticateToken, 
-    requireSuperAdmin, 
-    validate(toggleStatusSchema),
-    companiesController.toggleStatus
-);
+// router.patch('/:id/status', 
+//     authenticateToken, 
+//     requireSuperAdmin, 
+//     validate(toggleStatusSchema),
+//     companiesController.toggleStatus
+// );
 
 // Get Company - Superadmin OR Company Admin
 router.get('/:id', 
