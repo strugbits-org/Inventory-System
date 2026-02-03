@@ -305,7 +305,7 @@ export class JobsService {
       });
 
     // Transform jobMaterials array to object for each job
-    const transformedJobs = result.data.map(job => {
+    const transformedJobs = result.data.map((job: any) => {
       if (job.jobMaterials) {
         (job as any).jobMaterials = job.jobMaterials.reduce((acc: any, material: any) => {
           if (material.materialId) { // Use materialId for the key
