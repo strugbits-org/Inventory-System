@@ -38,7 +38,7 @@ class MaterialVariantController {
    */
   getAllVariants = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { isActive, type, cursor, limit } = req.query;
+      const { isActive, type, page, limit } = req.query;
       const search = req.query.search || req.query.q || req.query.query;
 
       const status = isActive === 'true' ? 'active' : 'inactive';
@@ -48,11 +48,11 @@ class MaterialVariantController {
         status: status as string | undefined,
         search: search as string | undefined,
         types: type as string[] | undefined,
-        cursor: cursor as string,
+        page: page ? Number(page) : 1,
         limit: limit ? Number(limit) : 10
       }, (req as any).user);
 
-      return res.status(200).json(ApiResponse.cursorPaginated(result.variants, result.meta));
+      return res.status(200).json(ApiResponse.paginated(result.variants, result.meta));
     } catch (error) {
       next(error);
     }

@@ -1,6 +1,7 @@
 import { Prisma, UserRole } from '@prisma/client';
 import { JwtPayload } from '../../middleware/jwtAuth.js';
 import db from '../../db/db.service.js';
+import { paginate } from '../../utils/pagination.js';
 
 interface CreateMaterialVariantInput {
   materialId: string;
@@ -174,7 +175,7 @@ export class MaterialVariantService {
    */
   async getAllMaterialVariants(
     params: {
-      cursor?: string,
+      page?: number,
       limit?: number;
       includeInactive?: boolean;
       status?: string;
@@ -189,7 +190,7 @@ export class MaterialVariantService {
       status,
       search,
       types,
-      cursor
+      page = 1
     } = params;
 
     const where: Prisma.MaterialVariantWhereInput = {};
@@ -232,22 +233,16 @@ export class MaterialVariantService {
         }
     }
 
-    // 1. Get paginated variants
-    const findManyArgs: Prisma.MaterialVariantFindManyArgs = {
+    // 1. Get paginated variants using the utility
+    const { data: variantsWithMaterial, meta: paginationMeta } = await paginate(db.prisma.materialVariant, {
+        page,
+        limit,
         where,
-        take: limit,
         orderBy: [{ name: 'asc' }, { id: 'asc' }],
         include: {
-          material: true,
+            material: true,
         },
-    };
-
-    if (cursor) {
-        findManyArgs.skip = 1;
-        findManyArgs.cursor = { id: cursor };
-    }
-
-    const variantsWithMaterial = await db.prisma.materialVariant.findMany(findManyArgs);
+    });
     
     // 2. Apply overage rate logic and effective pricing using the helper
     const variantsWithCorrectOverageAndPricing = await this._applyOverageRates(variantsWithMaterial, user);
@@ -271,13 +266,9 @@ export class MaterialVariantService {
         isActive: variant.isActive
     }));
 
-    const nextCursor = formattedVariants.length === limit ? formattedVariants[formattedVariants.length - 1].id : null;
-
     return {
       variants: formattedVariants,
-      meta: {
-        nextCursor,
-      },
+      meta: paginationMeta,
     };
   }
 

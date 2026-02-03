@@ -20,7 +20,7 @@ export class ApiResponse {
   /**
    * Helper for paginated responses
    */
-  static paginated(data: any[], meta: { total: number; page: number; limit: number; totalPages: number }, message: string = 'Success') {
+  static paginated(data: any[], meta: { currentPage: number; limit: number; totalRecords: number; totalPages: number; hasNextPage: boolean; hasPrevPage: boolean; }, message: string = 'Success') {
     return {
       success: true,
       message,
