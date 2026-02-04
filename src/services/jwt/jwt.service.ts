@@ -1,4 +1,4 @@
-import { User, UserRole } from '@prisma/client';
+import { User, UserRole, EmployeeType } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
 
@@ -10,6 +10,7 @@ export interface JwtPayload {
     userId: string;
     email: string;
     role: UserRole;
+    employeeType?: EmployeeType;
     companyId: string;
     locationId?: string;
 }
@@ -101,6 +102,7 @@ class JwtService {
             userId: user.id,
             email: user.email,
             role: user.role,
+            employeeType: user.employeeType || undefined,
             companyId: user.companyId,
             locationId: user.locationId || undefined,
         };

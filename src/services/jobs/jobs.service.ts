@@ -53,6 +53,9 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin or Production Manager)
    */
   async createJob(data: CreateJobData, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const companyId = user.companyId;
     const locationId = user.locationId;
 
@@ -181,6 +184,9 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async getJob(id: string, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const job = await prisma.job.findUnique({
       where: { id },
       include: {
@@ -226,6 +232,9 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async listJobs(params: { page?: number; limit?: number; companyId?: string; status?: JobStatus; search?: string, detailed?: boolean }, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const page = params.page || 1;
     const limit = params.limit || 10;
 
@@ -312,6 +321,9 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin or Production Manager)
    */
   async updateJob(id: string, data: UpdateJobData, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     return prisma.$transaction(async (tx) => {
         // 1. Fetch job to verify ownership
         const job = await tx.job.findUnique({ where: { id } });
@@ -407,6 +419,9 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin, Production Manager, or Installer)
    */
   async updateJobStatus(id: string, status: JobStatus, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const job = await prisma.job.findUnique({ where: { id } });
     if (!job) throw new AppError('Job not found', 404);
 
@@ -426,6 +441,9 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin or Production Manager)
    */
   async archiveJob(id: string, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const job = await prisma.job.findUnique({ where: { id } });
     if (!job) throw new AppError('Job not found', 404);
 
@@ -445,6 +463,9 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async listArchivedJobs(params: { page?: number, limit?: number; companyId?: string }, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const limit = params.limit || 10;
     const page = params.page || 1;
     
@@ -463,6 +484,9 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async getArchivedJobById(id: string, user: any) {
+    if (!user || !user.companyId) {
+      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    }
     const job = await this.getJob(id, user);
 
     if (job && job.status !== JobStatus.ARCHIVED) {
