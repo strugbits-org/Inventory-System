@@ -17,6 +17,7 @@ class JobsController {
   createJob = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
+      console.log('User in createJob controller:', user);
       const job = await this.jobsService.createJob(req.body, user);
 
       return res.status(201).json(ApiResponse.success(job, 'Job created successfully', 201));
@@ -33,6 +34,7 @@ class JobsController {
     try {
       const { id } = req.params;
       const user = (req as any).user;
+      console.log('User in getJob controller:', user);
 
       const job = await this.jobsService.getJob(id as string, user);
       if (!job) {
@@ -52,6 +54,7 @@ class JobsController {
   listJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
+      console.log('User in listJobs controller:', user);
       const { page, limit, companyId, status, search, detailed } = req.query;
 
       const result = await this.jobsService.listJobs({
