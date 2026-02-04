@@ -142,8 +142,8 @@ class MaterialVariantController {
       const { inStock, locationId } = req.body;
       const user = (req as any).user;
 
-      if (!user || !user.companyId) {
-        throw new AppError('Authentication required', 401);
+      if (!user || (!user.companyId && user.role !== 'SUPERADMIN')) {
+        throw new AppError('Authentication required or company context missing.', 401);
       }
 
       // Use provided locationId or fall back to user's location
@@ -176,8 +176,8 @@ class MaterialVariantController {
       const { locationId } = req.query;
       const user = (req as any).user;
 
-      if (!user || !user.companyId) {
-        throw new AppError('Authentication required', 401);
+      if (!user || (!user.companyId && user.role !== 'SUPERADMIN')) {
+        throw new AppError('Authentication required or company context missing.', 401);
       }
 
       // Use provided locationId or fall back to user's location
@@ -207,8 +207,8 @@ class MaterialVariantController {
       const { startDate, endDate, locationId } = req.query;
       const user = (req as any).user;
 
-      if (!user || !user.companyId) {
-        throw new AppError('Authentication required', 401);
+      if (!user || (!user.companyId && user.role !== 'SUPERADMIN')) {
+        throw new AppError('Authentication required or company context missing.', 401);
       }
 
       // Use provided locationId or fall back to user's location

@@ -19,8 +19,8 @@ class QuantityOverridesController {
       const user = (req as any).user;
       const { variantId, quantity } = req.body;
 
-      if (!user.companyId) {
-        throw new AppError('User is not associated with a company.', 400);
+      if (!user || !user.companyId) {
+        throw new AppError('User is not associated with a company or not authenticated.', 400);
       }
 
       const result = await this.quantityOverrideService.createOrUpdateOverride({

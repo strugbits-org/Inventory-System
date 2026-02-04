@@ -53,14 +53,16 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin or Production Manager)
    */
   async createJob(data: CreateJobData, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
-    const companyId = user.companyId;
-    const locationId = user.locationId;
+    const isSuperAdmin = user.role === UserRole.SUPERADMIN;
+    // For job creation, we either need the user's companyId or one provided in the data (for superadmins)
+    const companyId = isSuperAdmin ? (data.companyId || user.companyId) : user.companyId;
+    const locationId = user.locationId; // Location might still be required for creation context
 
     if (!companyId) {
-        throw new AppError('User does not belong to a company.', 400);
+        throw new AppError('Company ID is required for job creation.', 400);
     }
     if (!locationId) {
         throw new AppError('User is not associated with a location.', 400);
@@ -184,8 +186,8 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async getJob(id: string, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     const job = await prisma.job.findUnique({
       where: { id },
@@ -232,8 +234,8 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async listJobs(params: { page?: number; limit?: number; companyId?: string; status?: JobStatus; search?: string, detailed?: boolean }, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     const page = params.page || 1;
     const limit = params.limit || 10;
@@ -321,8 +323,8 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin or Production Manager)
    */
   async updateJob(id: string, data: UpdateJobData, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     return prisma.$transaction(async (tx) => {
         // 1. Fetch job to verify ownership
@@ -419,8 +421,8 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin, Production Manager, or Installer)
    */
   async updateJobStatus(id: string, status: JobStatus, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     const job = await prisma.job.findUnique({ where: { id } });
     if (!job) throw new AppError('Job not found', 404);
@@ -441,8 +443,8 @@ export class JobsService {
    * Restriction: Now handled by middleware (Company Admin or Production Manager)
    */
   async archiveJob(id: string, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     const job = await prisma.job.findUnique({ where: { id } });
     if (!job) throw new AppError('Job not found', 404);
@@ -463,8 +465,8 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async listArchivedJobs(params: { page?: number, limit?: number; companyId?: string }, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     const limit = params.limit || 10;
     const page = params.page || 1;
@@ -484,8 +486,8 @@ export class JobsService {
    * Restriction: Superadmin (all), Company/Employee (own company only)
    */
   async getArchivedJobById(id: string, user: any) {
-    if (!user || !user.companyId) {
-      throw new AppError('Authenticated user or company ID missing from token.', 401);
+    if (!user) {
+      throw new AppError('Authentication required.', 401);
     }
     const job = await this.getJob(id, user);
 

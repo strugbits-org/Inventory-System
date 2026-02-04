@@ -210,8 +210,8 @@ export const requireCompanyAccess = (
 
     // If a target company is specified, check access
     if (targetCompanyId) {
-      // Check if user belongs to the company
-      if (req.user.companyId !== targetCompanyId) {
+      // Check if user has a companyId and if it matches
+      if (!req.user.companyId || req.user.companyId !== targetCompanyId) {
         throw new AppError('Access denied to this company', 403);
       }
     }

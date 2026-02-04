@@ -19,6 +19,10 @@ class StocksController {
       const user = (req as any).user;
       const { start_date, end_date } = req.query;
 
+      if (!user || !user.companyId) {
+        throw new AppError('Authentication required or user not associated with a company.', 401);
+      }
+
       const projection = await this.stocksService.getStockProjection({
         companyId: user.companyId,
         startDate: new Date(start_date as string),
@@ -39,6 +43,10 @@ class StocksController {
     try {
       const { variantId, inStock } = req.body;
       const user = (req as any).user;
+
+      if (!user || !user.companyId) {
+        throw new AppError('Authentication required or user not associated with a company.', 401);
+      }
 
       const upsertedStock = await this.stocksService.updateStock({
         user: { companyId: user.companyId }, // Pass only companyId as locationId is no longer needed
