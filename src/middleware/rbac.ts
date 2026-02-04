@@ -186,7 +186,9 @@ export const requireCompanyAdminOrSuperAdminOrProductionManager = (
 };
 
 /**
- * Check if user belongs to a specific company
+ * Check if user belongs to a specific company.
+ * This middleware is now more flexible. If a companyId is present in params, body, or query, it validates access.
+ * If no companyId is provided, it passes, and the service layer is responsible for filtering results based on the user's own companyId.
  */
 export const requireCompanyAccess = (
   req: Request,
@@ -203,17 +205,19 @@ export const requireCompanyAccess = (
       return next();
     }
 
-    // Get company ID from request params or body
-    const targetCompanyId = req.params.companyId || req.body.companyId;
+    // Get company ID from request params, body, or query
+    const targetCompanyId = req.params.companyId || req.body.companyId || req.query.companyId;
 
-    if (!targetCompanyId) {
-      throw new AppError('Company ID is required', 400);
+    // If a target company is specified, check access
+    if (targetCompanyId) {
+      // Check if user belongs to the company
+      if (req.user.companyId !== targetCompanyId) {
+        throw new AppError('Access denied to this company', 403);
+      }
     }
-
-    // Check if user belongs to the company
-    if (req.user.companyId !== targetCompanyId) {
-      throw new AppError('Access denied to this company', 403);
-    }
+    
+    // If no targetCompanyId is specified, the service layer will handle filtering.
+    // For example, on GET /jobs, the service will only return jobs for the user's company.
 
     next();
   } catch (error) {
