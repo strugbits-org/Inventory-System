@@ -17,6 +17,7 @@ export class ProfileService {
                 phone: true,
                 address: true,
                 profileImage: true,
+                companyId: true,
                 role: true,
             },
         });
