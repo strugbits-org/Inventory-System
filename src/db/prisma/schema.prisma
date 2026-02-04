@@ -16,6 +16,11 @@ enum UserRole {
   EMPLOYEE
 }
 
+enum EmployeeType {
+  PRODUCTION_MANAGER
+  INSTALLER
+}
+
 enum JobStatus {
   PENDING
   ORDERED
@@ -27,18 +32,19 @@ enum JobStatus {
 
 // Models
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  firstName    String
+  lastName     String
   phone        String?
   address      String?
   profileImage String?
   role         UserRole
-  isActive     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  employeeType EmployeeType? @default(INSTALLER)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -147,8 +153,8 @@ model MaterialVariant {
   name           String // e.g. "Red 528", "Blue High-Solid"
   color          String?
   type           String?
-  regularPrice   Decimal  @db.Decimal(10, 2)
-  preferredPrice Decimal  @db.Decimal(10, 2)
+  regularPrice   Decimal  @default(0) @db.Decimal(10, 2)
+  preferredPrice Decimal  @default(0) @db.Decimal(10, 2)
   coverageArea   Decimal  @db.Decimal(10, 2)
   overageRate    Decimal  @db.Decimal(10, 2)
   quantity       Decimal  @default(0) @db.Decimal(10, 2)

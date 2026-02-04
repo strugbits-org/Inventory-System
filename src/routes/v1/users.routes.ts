@@ -1,21 +1,28 @@
 import express from 'express';
 import usersController from '../../controllers/users/users.controller.js';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
-import { requireCompanyAccess, requireUserAccess, requireCompanyAdminOrSuperAdmin } from '../../middleware/rbac.js';
+import {
+  requireCompanyAccess,
+  requireUserAccess,
+  requireCompanyAdminOrSuperAdmin,
+  requireCompanyAdminOrSuperAdminOrProductionManager,
+} from '../../middleware/rbac.js';
 
 const usersRoutes = express.Router();
 
-// Get users by company ID (paginated) - SUPERADMIN or COMPANY admin of that company
+// Get users by company ID (paginated) - SUPERADMIN, COMPANY admin, or PRODUCTION MANAGER of that company
 usersRoutes.get('/company/:companyId',
   authenticateToken,
   requireCompanyAccess,
+  requireCompanyAdminOrSuperAdminOrProductionManager,
   usersController.getUsersByCompanyId
 );
 
-// Get user by ID - SUPERADMIN, COMPANY (same company), or own data
+// Get user by ID - SUPERADMIN, COMPANY (same company), or own data, or PRODUCTION MANAGER
 usersRoutes.get('/:id',
   authenticateToken,
   requireUserAccess,
+  requireCompanyAdminOrSuperAdminOrProductionManager,
   usersController.getUserById
 );
 

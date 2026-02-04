@@ -13,5 +13,6 @@ export type {
 
 export {
   UserRole,
-  JobStatus
+  JobStatus,
+  EmployeeType
 } from '@prisma/client';

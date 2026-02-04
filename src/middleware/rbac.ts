@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './error.middleware.js';
-import { UserRole } from '../types/index.js';
+import { UserRole, EmployeeType } from '../types/index.js';
 
 /**
  * Role-Based Access Control (RBAC) middleware
@@ -30,6 +30,38 @@ export const requireRole = (...allowedRoles: UserRole[]) => {
 };
 
 /**
+ * Employee Type-Based Access Control middleware
+ * Checks if the authenticated user (who must be an EMPLOYEE) has one of the allowed employee types
+ */
+export const requireEmployeeType = (...allowedEmployeeTypes: EmployeeType[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      // Check if user is authenticated
+      if (!req.user) {
+        throw new AppError('Authentication required', 401);
+      }
+
+      // Ensure the user is an EMPLOYEE
+      if (req.user.role !== UserRole.EMPLOYEE) {
+        throw new AppError('Access denied. This action requires an employee role.', 403);
+      }
+
+      // Check if employee has one of the allowed employee types
+      if (!req.user.employeeType || !allowedEmployeeTypes.includes(req.user.employeeType)) {
+        throw new AppError(
+          `Access denied. Required employee type: ${allowedEmployeeTypes.join(' or ')}`,
+          403
+        );
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+/**
  * Check if user is a superadmin
  */
 export const requireSuperAdmin = requireRole(UserRole.SUPERADMIN);
@@ -40,9 +72,19 @@ export const requireSuperAdmin = requireRole(UserRole.SUPERADMIN);
 export const requireCompanyAdmin = requireRole(UserRole.COMPANY);
 
 /**
- * Check if user is an employee
+ * Check if user is an employee (any type)
  */
 export const requireEmployee = requireRole(UserRole.EMPLOYEE);
+
+/**
+ * Check if user is a production manager
+ */
+export const requireProductionManager = requireEmployeeType(EmployeeType.PRODUCTION_MANAGER);
+
+/**
+ * Check if user is an installer
+ */
+export const requireInstaller = requireEmployeeType(EmployeeType.INSTALLER);
 
 /**
  * Check if user is either company admin or superadmin
@@ -59,6 +101,89 @@ export const requireEmployeeOrCompanyAdmin = requireRole(
   UserRole.EMPLOYEE,
   UserRole.COMPANY
 );
+
+/**
+ * Check if user is either company admin or a production manager
+ */
+export const requireCompanyAdminOrProductionManager = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (
+      req.user.role === UserRole.COMPANY ||
+      (req.user.role === UserRole.EMPLOYEE &&
+        req.user.employeeType === EmployeeType.PRODUCTION_MANAGER)
+    ) {
+      return next();
+    }
+
+    throw new AppError('Access denied. Required role: Company Admin or Production Manager', 403);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Check if user is either company admin, a production manager, or an installer
+ */
+export const requireCompanyAdminOrProductionManagerOrInstaller = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (
+      req.user.role === UserRole.COMPANY ||
+      (req.user.role === UserRole.EMPLOYEE &&
+        (req.user.employeeType === EmployeeType.PRODUCTION_MANAGER ||
+         req.user.employeeType === EmployeeType.INSTALLER))
+    ) {
+      return next();
+    }
+
+    throw new AppError('Access denied. Required role: Company Admin, Production Manager, or Installer', 403);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Check if user is either company admin, superadmin, or a production manager
+ */
+export const requireCompanyAdminOrSuperAdminOrProductionManager = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (
+      req.user.role === UserRole.COMPANY ||
+      req.user.role === UserRole.SUPERADMIN ||
+      (req.user.role === UserRole.EMPLOYEE &&
+        req.user.employeeType === EmployeeType.PRODUCTION_MANAGER)
+    ) {
+      return next();
+    }
+
+    throw new AppError('Access denied. Required role: Company Admin, Superadmin, or Production Manager', 403);
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Check if user belongs to a specific company

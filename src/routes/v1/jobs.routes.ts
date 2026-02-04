@@ -2,7 +2,11 @@ import express from 'express';
 import Joi from 'joi';
 import jobsController from '../../controllers/jobs/jobs.controller.js';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
-import { requireCompanyAdmin } from '../../middleware/rbac.js';
+import {
+  requireCompanyAdminOrProductionManager,
+  requireCompanyAdminOrProductionManagerOrInstaller,
+  requireCompanyAccess,
+} from '../../middleware/rbac.js';
 import { validate } from '../../middleware/validation.middleware.js';
 import { JobStatus } from '@prisma/client';
 
@@ -62,30 +66,30 @@ const listJobsSchema = Joi.object({
     detailed: Joi.boolean(),
 });
 
-// Create Job - Company Admin only
-router.post('/', authenticateToken, requireCompanyAdmin, validate(createJobSchema), jobsController.createJob);
+// Create Job - Company Admin or Production Manager
+router.post('/', authenticateToken, requireCompanyAdminOrProductionManager, validate(createJobSchema), jobsController.createJob);
 
-// List Jobs - Authenticated users (Filter logic in service)
-router.get('/', authenticateToken, validate(listJobsSchema, 'query'), jobsController.listJobs);
+// List Jobs - Company Admin, Production Manager, or Installer (within their company)
+router.get('/', authenticateToken, requireCompanyAccess, requireCompanyAdminOrProductionManagerOrInstaller, validate(listJobsSchema, 'query'), jobsController.listJobs);
 
 // --- Archived Jobs ---
-// List Archived Jobs
-router.get('/archived', authenticateToken, jobsController.listArchivedJobs);
+// List Archived Jobs - Company Admin, Production Manager, or Installer (within their company)
+router.get('/archived', authenticateToken, requireCompanyAccess, requireCompanyAdminOrProductionManagerOrInstaller, jobsController.listArchivedJobs);
 
-// Get Archived Job by ID
-router.get('/archived/:id', authenticateToken, jobsController.getArchivedJobById);
+// Get Archived Job by ID - Company Admin, Production Manager, or Installer (within their company)
+router.get('/archived/:id', authenticateToken, requireCompanyAccess, requireCompanyAdminOrProductionManagerOrInstaller, jobsController.getArchivedJobById);
 
-// Get Job - Authenticated users (Filter logic in service)
-router.get('/:id', authenticateToken, jobsController.getJob);
+// Get Job - Company Admin, Production Manager, or Installer (within their company)
+router.get('/:id', authenticateToken, requireCompanyAccess, requireCompanyAdminOrProductionManagerOrInstaller, jobsController.getJob);
 
-// Update Job - Company Admin only
-router.patch('/:id', authenticateToken, requireCompanyAdmin, validate(updateJobSchema), jobsController.updateJob);
+// Update Job - Company Admin or Production Manager
+router.patch('/:id', authenticateToken, requireCompanyAdminOrProductionManager, validate(updateJobSchema), jobsController.updateJob);
 
-// Update Job Status - Company Admin only
-router.patch('/:id/status', authenticateToken, requireCompanyAdmin, validate(updateStatusSchema), jobsController.updateStatus);
+// Update Job Status - Company Admin, Production Manager, or Installer
+router.patch('/:id/status', authenticateToken, requireCompanyAdminOrProductionManagerOrInstaller, validate(updateStatusSchema), jobsController.updateStatus);
 
-// Archive Job (Soft Delete) - Company Admin only
-router.delete('/:id', authenticateToken, requireCompanyAdmin, jobsController.archiveJob);
+// Archive Job (Soft Delete) - Company Admin or Production Manager
+router.delete('/:id', authenticateToken, requireCompanyAdminOrProductionManager, jobsController.archiveJob);
 
 export default router;
 

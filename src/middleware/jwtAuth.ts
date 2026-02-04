@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { AppError } from './error.middleware.js';
-import { UserRole } from '../types/index.js';
+import { UserRole, EmployeeType } from '../types/index.js';
 import db from '../db/db.service.js';
 
 /**
@@ -13,6 +13,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: UserRole;
+  employeeType?: EmployeeType;
   companyId: string;  // Required field
   locationId?: string;
 }
