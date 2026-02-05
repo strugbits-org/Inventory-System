@@ -138,7 +138,7 @@ router.get('/',
  */
 router.patch('/',
     authenticateToken,
-    requireEmployeeOrCompanyAdmin,
+    requireCompanyAdminOrProductionManagerOrInstaller,
     validate(updateProfileSchema),
     profileController.updateProfile
 );
