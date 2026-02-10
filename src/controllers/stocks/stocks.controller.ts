@@ -17,7 +17,7 @@ class StocksController {
   getStockProjection = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
-      const { start_date, end_date, companyId } = req.query;
+      const { start_date, end_date, companyId, page, limit } = req.query;
 
       if (!user) {
         throw new AppError('Authentication required.', 401);
@@ -33,13 +33,15 @@ class StocksController {
         throw new AppError('User not associated with a company.', 401);
       }
 
-      const projection = await this.stocksService.getStockProjection({
+      const result = await this.stocksService.getStockProjection({
         companyId: targetCompanyId,
         startDate: new Date(start_date as string),
         endDate: new Date(end_date as string),
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 10,
       });
 
-      return res.status(200).json(ApiResponse.success(projection));
+      return res.status(200).json(ApiResponse.paginated(result.data, result.meta));
     } catch (error: any) {
       next(error);
     }
@@ -66,7 +68,7 @@ class StocksController {
       }
 
       const upsertedStock = await this.stocksService.updateStock({
-        user: { companyId: targetCompanyId }, 
+        user: { companyId: targetCompanyId },
         variantId,
         inStock,
       });

@@ -6,6 +6,8 @@ interface GetStockProjectionParams {
   companyId: string;
   startDate: Date;
   endDate: Date;
+  page?: number;
+  limit?: number;
 }
 
 interface UpdateStockParams {
@@ -21,7 +23,7 @@ export class StocksService {
   /**
    * Get stock projection for a date range
    */
-  async getStockProjection({ companyId, startDate, endDate }: GetStockProjectionParams) {
+  async getStockProjection({ companyId, startDate, endDate, page = 1, limit = 10 }: GetStockProjectionParams) {
     // 1. Find all jobs in the date range for the company
     const jobs = await prisma.job.findMany({
       where: {
@@ -45,7 +47,17 @@ export class StocksService {
     });
 
     if (!jobs.length) {
-      return [];
+      return {
+        data: [],
+        meta: {
+          currentPage: page,
+          limit,
+          totalRecords: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
     }
 
     // 2. Aggregate required quantities for each variant
@@ -62,18 +74,18 @@ export class StocksService {
     const companyQuantityOverrides = await prisma.companyQuantityOverride.findMany({
       where: { companyId },
     });
-    
+
     // 4. Populate stockQuantities map from CompanyQuantityOverride
     const stockQuantities = new Map<string, number>();
     for (const overrideItem of companyQuantityOverrides) {
-        const existingStock = stockQuantities.get(overrideItem.variantId) || 0;
-        stockQuantities.set(overrideItem.variantId, existingStock + Number(overrideItem.quantity)); // Use override.quantity as inStock
+      const existingStock = stockQuantities.get(overrideItem.variantId) || 0;
+      stockQuantities.set(overrideItem.variantId, existingStock + Number(overrideItem.quantity)); // Use override.quantity as inStock
     }
 
     // 5. Combine and calculate needed quantities
-    const projection = Array.from(requiredQuantities.values()).map(({ variant, required }) => {
+    const allProjections = Array.from(requiredQuantities.values()).map(({ variant, required }) => {
       // Use the quantity from CompanyQuantityOverride as the "inStock" for projection
-      const inStock = stockQuantities.get(variant.id) || 0; 
+      const inStock = stockQuantities.get(variant.id) || 0;
       const needed = Math.max(0, required - inStock);
       return {
         'color': variant.color,
@@ -88,7 +100,25 @@ export class StocksService {
       };
     });
 
-    return projection;
+    // 6. Apply Pagination
+    const totalRecords = allProjections.length;
+    const totalPages = Math.ceil(totalRecords / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    const paginatedData = allProjections.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedData,
+      meta: {
+        currentPage: page,
+        limit,
+        totalRecords,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    };
   }
 
   /**

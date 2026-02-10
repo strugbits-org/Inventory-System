@@ -19,6 +19,7 @@ export class ProfileService {
                 profileImage: true,
                 companyId: true,
                 role: true,
+                employeeType: true,
             },
         });
 
@@ -122,7 +123,7 @@ export class ProfileService {
                 console.error(`Failed to delete old profile image from S3: ${error}`);
             }
         }
-        
+
         // Upload new image to S3
         const fileExtension = file.originalname.split('.').pop();
         const newFileName = `${userId}-${crypto.randomBytes(16).toString('hex')}.${fileExtension}`;

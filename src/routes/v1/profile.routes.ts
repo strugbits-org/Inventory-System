@@ -2,6 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 import profileController from '../../controllers/profile/profile.controller.js';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
+import { requireEmployeeOrCompanyAdmin, requireCompanyAdminOrProductionManagerOrInstaller } from '../../middleware/rbac.js';
 import { validate } from '../../middleware/validation.middleware.js';
 
 const router = express.Router();
@@ -99,6 +100,7 @@ const updateProfileSchema = Joi.object({
  */
 router.get('/',
     authenticateToken,
+    requireCompanyAdminOrProductionManagerOrInstaller,
     profileController.getProfile
 );
 
@@ -136,9 +138,9 @@ router.get('/',
  */
 router.patch('/',
     authenticateToken,
+    requireCompanyAdminOrProductionManagerOrInstaller,
     validate(updateProfileSchema),
     profileController.updateProfile
 );
 
 export default router;
-
