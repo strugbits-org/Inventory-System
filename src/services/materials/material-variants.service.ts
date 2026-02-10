@@ -238,7 +238,7 @@ export class MaterialVariantService {
         page,
         limit,
         where,
-        orderBy: [{ id: 'asc' }],
+        orderBy: [{ id: 'variantId' }],
         include: {
             material: true,
         },
