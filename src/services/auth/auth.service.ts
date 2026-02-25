@@ -51,6 +51,11 @@ class AuthService {
             throw new Error('Invalid email or password');
         }
 
+        // Check if user is active
+        if (!user.isActive) {
+            throw new Error('Your account is inactive. Contact your company admin');
+        }
+
         // Check if company is disabled
         if (user.companyId && user.company) {
             if (!user.company.isActive) {

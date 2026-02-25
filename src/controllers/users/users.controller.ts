@@ -81,6 +81,7 @@ class UsersController {
                     companyId: true,
                     locationId: true,
                     employeeType: true,
+                    profileImage: true,
                     createdAt: true,
                     updatedAt: true
                 },
