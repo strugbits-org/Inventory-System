@@ -1,42 +1,24 @@
-import {
-  SESClient,
-  SendEmailCommand,
-  SendEmailCommandInput,
-} from '@aws-sdk/client-ses';
+import sgMail from '@sendgrid/mail';
 import { env } from '../config/env.js';
 
-const sesClient = new SESClient({
-  region: env.AWS_REGION,
-  credentials: {
-    accessKeyId: env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+sgMail.setApiKey(env.SENDGRID_API_KEY);
 
 const sendEmail = async (to: string, subject: string, html: string) => {
-  const params: SendEmailCommandInput = {
-    Source: env.SMTP_FROM,
-    Destination: {
-      ToAddresses: [to],
-    },
-    Message: {
-      Subject: {
-        Data: subject,
-      },
-      Body: {
-        Html: {
-          Data: html,
-        },
-      },
-    },
+  const msg = {
+    to,
+    from: env.SMTP_FROM,
+    subject,
+    html,
   };
 
   try {
-    const command = new SendEmailCommand(params);
-    await sesClient.send(command);
+    await sgMail.send(msg);
     console.log(`Email sent successfully to ${to}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error sending email to ${to}:`, error);
+    if (error.response) {
+      console.error(error.response.body);
+    }
     throw new Error('Failed to send email.');
   }
 };
