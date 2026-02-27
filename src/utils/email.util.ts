@@ -3,11 +3,12 @@ import { env } from '../config/env.js';
 
 sgMail.setApiKey(env.SENDGRID_API_KEY);
 
-const sendEmail = async (to: string, subject: string, html: string) => {
+const sendEmail = async (to: string, subject: string, html: string, fromOverride?: string) => {
   const msg = {
     to,
-    from: env.SMTP_FROM,
+    from: fromOverride || env.SMTP_FROM,
     subject,
+    text: html.replace(/<[^>]*>?/gm, ''), // Basic HTML stripping for text version
     html,
   };
 
