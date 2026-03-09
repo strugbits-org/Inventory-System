@@ -1,7 +1,7 @@
 import express from 'express';
 import Joi from 'joi';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
-import { requireCompanyAdmin } from '../../middleware/rbac.js';
+import { requireCompanyAdminOrSuperAdminOrProductionManager } from '../../middleware/rbac.js';
 import { validate } from '../../middleware/validation.middleware.js';
 import overridesController from '../../controllers/overrides/overrides.controller.js';
 
@@ -16,7 +16,7 @@ const overrideSchema = Joi.object({
 router.post(
   '/',
   authenticateToken,
-  requireCompanyAdmin,
+  requireCompanyAdminOrSuperAdminOrProductionManager,
   validate(overrideSchema),
   overridesController.createOrUpdateOverride
 );

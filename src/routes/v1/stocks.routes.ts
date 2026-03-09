@@ -41,7 +41,7 @@ const emailManufacturerSchema = Joi.object({
 router.get('/projection', authenticateToken, requireEmployeeOrCompanyAdmin, validate(projectionSchema, 'query'), stocksController.getStockProjection);
 
 // Upsert stock quantity for a user's location
-router.post('/', authenticateToken, requireCompanyAdminOrSuperAdmin, validate(stockUpsertSchema), stocksController.updateStock);
+router.post('/', authenticateToken, requireCompanyAdminOrSuperAdminOrProductionManager, validate(stockUpsertSchema), stocksController.updateStock);
 
 // Email manufacturer for restocking
 router.post('/email-manufacturer', authenticateToken, requireCompanyAdminOrSuperAdminOrProductionManager, validate(emailManufacturerSchema), stocksController.emailManufacturer);

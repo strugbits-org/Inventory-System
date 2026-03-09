@@ -1,4 +1,4 @@
-import { Prisma, JobStatus, UserRole } from '@prisma/client';
+import { Prisma, JobStatus, UserRole, EmployeeType } from '@prisma/client';
 import { prisma } from '../../db/db.service.js';
 import { AppError } from '../../middleware/error.middleware.js';
 import { paginate } from '../../utils/pagination.js';
@@ -49,6 +49,32 @@ interface UpdateJobData {
 }
 
 export class JobsService {
+
+  /**
+   * Helper to strip pricing data for production managers
+   */
+  private stripPricing(job: any, user: any) {
+    if (user.role === UserRole.EMPLOYEE && user.employeeType === EmployeeType.PRODUCTION_MANAGER) {
+      delete job.jobCost;
+      if (job.jobMaterials) {
+        // If it's an array
+        if (Array.isArray(job.jobMaterials)) {
+          job.jobMaterials.forEach((jm: any) => {
+            delete jm.costAtTime;
+            delete jm.additionalCost;
+          });
+        } 
+        // If it's the transformed object
+        else {
+          Object.values(job.jobMaterials).forEach((jm: any) => {
+            delete jm.costAtTime;
+            delete jm.additionalCost;
+          });
+        }
+      }
+    }
+    return job;
+  }
 
   /**
    * Create a new job
@@ -151,7 +177,7 @@ export class JobsService {
     }
 
     // 4. Create Job and JobMaterials in a transaction
-    return prisma.$transaction(async (prisma) => {
+    const job = await prisma.$transaction(async (prisma) => {
       const job = await prisma.job.create({
         data: {
           jobId: data.jobId,
@@ -171,6 +197,9 @@ export class JobsService {
             connect: data.assignedEmployeeIds.map(id => ({ id }))
           } : undefined,
         },
+        include: {
+          jobMaterials: true
+        }
       });
 
       const jobMaterialsToCreate = data.jobMaterials.map(jm => {
@@ -195,8 +224,14 @@ export class JobsService {
         data: jobMaterialsToCreate,
       });
 
-      return job;
+      // Refetch to include the newly created materials
+      return prisma.job.findUnique({
+        where: { id: job.id },
+        include: { jobMaterials: true }
+      });
     });
+
+    return this.stripPricing(job, user);
   }
 
   /**
@@ -263,7 +298,7 @@ export class JobsService {
       }, {});
     }
 
-    return job;
+    return this.stripPricing(job, user);
   }
 
   /**
@@ -373,7 +408,7 @@ export class JobsService {
         include: includeClause
       });
 
-    // Transform jobMaterials array to object for each job
+    // Transform jobMaterials array to object for each job and strip pricing
     const transformedJobs = result.data.map((job: any) => {
       if (job.jobMaterials) {
         (job as any).jobMaterials = job.jobMaterials.reduce((acc: any, material: any) => {
@@ -383,7 +418,7 @@ export class JobsService {
           return acc;
         }, {});
       }
-      return job;
+      return this.stripPricing(job, user);
     });
 
 
@@ -401,7 +436,7 @@ export class JobsService {
     if (!user) {
       throw new AppError('Authentication required.', 401);
     }
-    return prisma.$transaction(async (tx) => {
+    const updatedJob = await prisma.$transaction(async (tx) => {
         // 1. Fetch job to verify ownership
         const job = await tx.job.findUnique({ where: { id } });
 
@@ -506,6 +541,8 @@ export class JobsService {
             include: { jobMaterials: true }
         });
     });
+
+    return this.stripPricing(updatedJob, user);
   }
 
   /**
