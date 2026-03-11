@@ -110,7 +110,7 @@ export const newUserCredentialsEmailTemplate = (params: NewUserCredentialsEmailP
     <body>
       <div class="container">
         <div class="header">
-          <img width="50" src="https://portal.masterinstaller.pro/logo.png" alt="Resinwerks Logo" class="logo-img">
+          <img width="80" src="https://portal.masterinstaller.pro/logo.png" alt="Resinwerks Logo" class="logo-img">
         </div>
 
         <h1>Welcome to ${companyName}!</h1>

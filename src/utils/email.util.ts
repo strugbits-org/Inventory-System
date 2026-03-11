@@ -87,6 +87,7 @@ interface SendManufacturerRestockEmailParams {
     variantName: string;
     materialName: string;
     quantityNeeded: number;
+    color?: string;
   }>;
 }
 
@@ -99,7 +100,7 @@ export const sendManufacturerRestockEmail = async (params: SendManufacturerResto
     from: env.SMTP_FROM,
     replyTo: from,
     subject,
-    text: message + '\n\n' + items.map(i => `${i.materialName} - ${i.variantName}: ${i.quantityNeeded}`).join('\n'),
+    text: message + '\n\n' + items.map(i => `${i.materialName} - ${i.variantName} (Color: ${i.color || 'N/A'}): ${i.quantityNeeded}`).join('\n'),
     html,
   };
 

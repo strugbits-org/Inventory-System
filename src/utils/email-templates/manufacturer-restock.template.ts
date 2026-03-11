@@ -3,6 +3,7 @@ interface RestockItem {
   variantName: string;
   materialName: string;
   quantityNeeded: number;
+  color?: string;
 }
 
 interface ManufacturerRestockEmailParams {
@@ -17,6 +18,7 @@ export const manufacturerRestockEmailTemplate = (params: ManufacturerRestockEmai
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.materialName}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.variantName}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.color || 'N/A'}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563; text-align: right; font-weight: bold;">${item.quantityNeeded}</td>
     </tr>
   `).join('');
@@ -48,11 +50,9 @@ export const manufacturerRestockEmailTemplate = (params: ManufacturerRestockEmai
           text-align: center;
           margin-bottom: 30px;
         }
-        .logo {
-          font-size: 32px;
-          font-weight: bold;
-          color: #2563eb;
-          margin-bottom: 10px;
+        .logo-img {
+          max-width: 200px;
+          height: auto;
         }
         h1 {
           color: #1f2937;
@@ -97,7 +97,7 @@ export const manufacturerRestockEmailTemplate = (params: ManufacturerRestockEmai
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">🏗️ Resinwerks</div>
+          <img width="80" src="https://portal.masterinstaller.pro/logo.png" alt="ResinWerks Logo" class="logo-img">
         </div>
 
         <h1>Restock Request</h1>
@@ -112,6 +112,7 @@ export const manufacturerRestockEmailTemplate = (params: ManufacturerRestockEmai
             <tr>
               <th>Material</th>
               <th>Variant</th>
+              <th>Color</th>
               <th style="text-align: right;">Quantity</th>
             </tr>
           </thead>

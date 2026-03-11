@@ -29,6 +29,7 @@ interface EmailManufacturerParams {
     variantName: string;
     materialName: string;
     quantityNeeded: number;
+    color?: string;
   }>;
 }
 

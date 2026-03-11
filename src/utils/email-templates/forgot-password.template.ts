@@ -88,7 +88,7 @@ export const forgotPasswordEmailTemplate = (params: ForgotPasswordEmailParams): 
     <body>
       <div class="container">
         <div class="header">
-          <img width="50" src="https://portal.masterinstaller.pro/logo.png" alt="ResinWerks Logo" class="logo-img">
+          <img width="80" src="https://portal.masterinstaller.pro/logo.png" alt="ResinWerks Logo" class="logo-img">
           <h1>Reset Your Password</h1>
         </div>
         
