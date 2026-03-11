@@ -107,7 +107,7 @@ export const companyInviteEmailTemplate = (params: CompanyInviteEmailParams): st
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://portal.masterinstaller.pro/_next/image?url=%2Flogo.png&w=256&q=75" alt="Resinwerks Logo" class="logo-img">
+          <img width="50" src="https://portal.masterinstaller.pro/logo.png" alt="Resinwerks Logo" class="logo-img">
         </div>
 
         <h1>You're Invited to Join ${companyName} on Resinwerks!</h1>

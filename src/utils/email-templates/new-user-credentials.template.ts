@@ -110,16 +110,16 @@ export const newUserCredentialsEmailTemplate = (params: NewUserCredentialsEmailP
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://portal.masterinstaller.pro/_next/image?url=%2Flogo.png&w=256&q=75" alt="Resinwerks Logo" class="logo-img">
+          <img width="50" src="https://portal.masterinstaller.pro/logo.png" alt="Resinwerks Logo" class="logo-img">
         </div>
 
         <h1>Welcome to ${companyName}!</h1>
 
         <p>Hello ${name},</p>
 
-        ${customMessage ? `<div class="custom-message">${customMessage}</div>` : `<p>
-          An account has been created for you to join <strong>${companyName}</strong> on the Resinwerks platform.
-        </p>`}
+        <p>
+          ${customMessage ? customMessage : `An account has been created for you to join <strong>${companyName}</strong> on the Resinwerks platform.`}
+        </p>
 
         <p>Here are your login credentials:</p>
 
