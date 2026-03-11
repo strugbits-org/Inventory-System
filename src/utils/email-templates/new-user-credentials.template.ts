@@ -117,11 +117,9 @@ export const newUserCredentialsEmailTemplate = (params: NewUserCredentialsEmailP
 
         <p>Hello ${name},</p>
 
-        ${customMessage ? `<div class="custom-message">${customMessage}</div>` : ''}
-
-        <p>
+        ${customMessage ? `<div class="custom-message">${customMessage}</div>` : `<p>
           An account has been created for you to join <strong>${companyName}</strong> on the Resinwerks platform.
-        </p>
+        </p>`}
 
         <p>Here are your login credentials:</p>
 
