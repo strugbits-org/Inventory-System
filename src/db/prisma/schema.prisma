@@ -195,7 +195,7 @@ model Job {
   id              String    @id @default(uuid())
   jobId           String
   companyId       String
-  locationId      String
+  locationId      String?
   createdByUserId String
   jobCost         Decimal   @db.Decimal(10, 2)
   clientFirstName String
@@ -210,7 +210,7 @@ model Job {
   updatedAt       DateTime  @updatedAt
 
   company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  location     Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  location     Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
   createdBy    User     @relation("CreatedBy", fields: [createdByUserId], references: [id])
   jobMaterials JobMaterial[]
   assignedEmployees User[] @relation("JobAssignments")

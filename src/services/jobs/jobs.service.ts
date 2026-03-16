@@ -109,13 +109,10 @@ export class JobsService {
     const isSuperAdmin = user.role === UserRole.SUPERADMIN;
     // For job creation, we either need the user's companyId or one provided in the data (for superadmins)
     const companyId = isSuperAdmin ? (data?.companyId || user.companyId) : user.companyId;
-    const locationId = user.locationId; // Location might still be required for creation context
+    const locationId = user.locationId;
 
     if (!companyId) {
         throw new AppError('Company ID is required for job creation.', 400);
-    }
-    if (!locationId) {
-        throw new AppError('User is not associated with a location.', 400);
     }
 
     // Fetch company's preferredPriceEnabled setting
