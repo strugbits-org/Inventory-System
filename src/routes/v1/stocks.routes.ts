@@ -2,10 +2,10 @@ import express from 'express';
 import Joi from 'joi';
 import stocksController from '../../controllers/stocks/stocks.controller.js';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
-import { 
-  requireCompanyAdminOrSuperAdmin, 
-  requireEmployeeOrCompanyAdmin, 
-  requireCompanyAdminOrSuperAdminOrProductionManager 
+import {
+  requireCompanyAdminOrSuperAdmin,
+  requireEmployeeOrCompanyAdmin,
+  requireCompanyAdminOrSuperAdminOrProductionManager
 } from '../../middleware/rbac.js';
 import { validate } from '../../middleware/validation.middleware.js';
 
@@ -33,6 +33,7 @@ const emailManufacturerSchema = Joi.object({
       variantName: Joi.string().required(),
       materialName: Joi.string().required(),
       quantityNeeded: Joi.number().required(),
+      color: Joi.string().optional().allow('', null),
     })
   ).required(),
 });
