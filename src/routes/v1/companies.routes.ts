@@ -2,7 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 import companiesController from '../../controllers/companies/companies.controller.js';
 import { authenticateToken } from '../../middleware/jwtAuth.js';
-import { requireSuperAdmin, requireCompanyAdminOrSuperAdmin } from '../../middleware/rbac.js';
+import { requireSuperAdmin, requireCompanyAdminOrSuperAdmin, requireCompanyAdminOrProductionManager, requireCompanyAdminOrSuperAdminOrProductionManager } from '../../middleware/rbac.js';
 import { validate } from '../../middleware/validation.middleware.js';
 
 const router = express.Router();
@@ -39,9 +39,9 @@ const updateCompanySchema = Joi.object({
 router.post('/', validate(createCompanySchema), companiesController.createCompany);
 
 // List Companies - Superadmin only
-router.get('/', 
+router.get('/',
     authenticateToken,
-    requireSuperAdmin, 
+    requireSuperAdmin,
     companiesController.listCompanies
 );
 
@@ -54,16 +54,16 @@ router.get('/',
 // );
 
 // Get Company - Superadmin OR Company Admin
-router.get('/:id', 
-    authenticateToken, 
-    requireCompanyAdminOrSuperAdmin, 
+router.get('/:id',
+    authenticateToken,
+    requireCompanyAdminOrSuperAdminOrProductionManager,
     companiesController.getCompany
 );
 
 // Update Company - Superadmin OR Company Admin
-router.patch('/:id', 
-    authenticateToken, 
-    requireCompanyAdminOrSuperAdmin, 
+router.patch('/:id',
+    authenticateToken,
+    requireCompanyAdminOrSuperAdmin,
     validate(updateCompanySchema),
     companiesController.updateCompany
 );
